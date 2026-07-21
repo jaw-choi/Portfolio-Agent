@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.schemas.chat import ChatRequest, ChatResponse
+
 app = FastAPI(
     title="Personal Career Knowledge Agent",
     description=(
@@ -23,3 +25,9 @@ def health_check() -> dict[str, str]:
         "status": "healthy",
         "service": "personal-career-knowledge-agent",
     }
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest) -> ChatResponse:
+    # TODO: 2주차에 llm_client.py를 통한 실제 LLM 호출로 교체
+    return ChatResponse(reply=f"Echo: {request.message}")
