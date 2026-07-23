@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.llm_client import get_completion
 
 app = FastAPI(
     title="Personal Career Knowledge Agent",
@@ -29,5 +30,8 @@ def health_check() -> dict[str, str]:
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    # TODO: 2주차에 llm_client.py를 통한 실제 LLM 호출로 교체
-    return ChatResponse(reply=f"Echo: {request.message}")
+    try:
+        reply = get_completion(request.message)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"LLM 호출 실패: {exc}") from exc
+    return ChatResponse(reply=reply)
