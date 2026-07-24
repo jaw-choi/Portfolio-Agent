@@ -70,7 +70,7 @@ curl -X POST http://127.0.0.1:8000/documents \
 ```
 
 ```json
-{"document_id": "...", "filename": "notes.txt", "size_bytes": 123, "status": "uploaded"}
+{"document_id": "...", "filename": "notes.txt", "size_bytes": 123, "status": "uploaded", "text_length": 118}
 ```
 
 ## 테스트
@@ -86,11 +86,12 @@ pytest
 - Claude API 연동 (`app/services/llm_client.py`) — system/user 프롬프트 분리(`app/core/prompts.py`), tool-use 기반 구조화 응답(`answer`/`reason`/`sources`), 타임아웃·재시도·에러 처리
 - 질문/응답/응답시간 로그 저장 및 조회 (`app/core/chat_log.py`, `/logs`)
 - PDF/TXT 파일 업로드 (`app/ingestion/storage.py`) — `data/raw/`에 저장, 지원하지 않는 확장자는 400 반환
-- pytest 테스트 (`tests/test_api.py`, `tests/test_llm_client.py`, `tests/test_chat_log.py`, `tests/test_ingestion_storage.py`)
+- 업로드 시 텍스트 추출/정제 (`app/ingestion/parser.py`) — PDF는 `pypdf`, TXT는 직접 읽어 공백/빈 줄 정리 후 `data/processed/`에 저장
+- pytest 테스트 (`tests/test_api.py`, `tests/test_llm_client.py`, `tests/test_chat_log.py`, `tests/test_ingestion_storage.py`, `tests/test_ingestion_parser.py`)
 
 ## 다음 작업 (미착수)
 
-- 업로드된 문서에서 텍스트 추출/정제 (`parser.py`) 및 chunk 분할 (`chunker.py`)
+- chunk 분할 (`chunker.py`)
 - 문서 메타데이터 DB 저장 (문서명/페이지/chunk)
 - 공통 Document 형식 변환 및 Vector DB 색인·검색 (`app/retrieval`)
 - 답변과 함께 출처(문서 경로 또는 URL) 반환

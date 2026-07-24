@@ -27,4 +27,5 @@ def save_upload(filename: str, content: bytes) -> dict:
         "filename": filename,
         "size_bytes": len(content),
         "status": "uploaded",
+        "path": stored_path,
     }
