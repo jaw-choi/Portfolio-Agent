@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from app.ingestion import storage
 from app.main import app
 
 client = TestClient(app)
@@ -52,3 +53,27 @@ def test_read_logs():
     assert response.status_code == 200
     assert response.json() == mocked_logs
     mock_get_logs.assert_called_once_with(5)
+
+
+def test_upload_document_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(storage, "RAW_DIR", tmp_path)
+
+    response = client.post(
+        "/documents",
+        files={"file": ("notes.txt", b"hello", "text/plain")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filename"] == "notes.txt"
+    assert body["size_bytes"] == 5
+    assert body["status"] == "uploaded"
+
+
+def test_upload_document_rejects_unsupported_type():
+    response = client.post(
+        "/documents",
+        files={"file": ("virus.exe", b"data", "application/octet-stream")},
+    )
+
+    assert response.status_code == 400

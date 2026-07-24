@@ -1,9 +1,11 @@
 import time
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
+from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.document import DocumentUploadResponse
 from app.services.llm_client import get_completion
 
 app = FastAPI(
@@ -48,3 +50,13 @@ def chat(request: ChatRequest) -> ChatResponse:
 @app.get("/logs")
 def read_logs(limit: int = 20) -> list[dict]:
     return get_logs(limit)
+
+
+@app.post("/documents", response_model=DocumentUploadResponse)
+async def upload_document(file: UploadFile = File(...)) -> DocumentUploadResponse:
+    content = await file.read()
+    try:
+        result = save_upload(file.filename, content)
+    except UnsupportedFileTypeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return DocumentUploadResponse(**result)

@@ -62,6 +62,17 @@ curl "http://127.0.0.1:8000/logs?limit=5"
 [{"timestamp": "...", "message": "...", "answer": "...", "response_time_ms": 812.4}]
 ```
 
+**문서 업로드**
+
+```bash
+curl -X POST http://127.0.0.1:8000/documents \
+  -F "file=@notes.txt"
+```
+
+```json
+{"document_id": "...", "filename": "notes.txt", "size_bytes": 123, "status": "uploaded"}
+```
+
 ## 테스트
 
 ```bash
@@ -70,15 +81,17 @@ pytest
 
 ## 구현 범위 (현재)
 
-- FastAPI 서버, `/health`, `/chat`, `/logs` 엔드포인트
-- Pydantic 스키마 기반 요청/응답 검증 (`app/schemas/chat.py`)
+- FastAPI 서버, `/health`, `/chat`, `/logs`, `/documents` 엔드포인트
+- Pydantic 스키마 기반 요청/응답 검증 (`app/schemas/chat.py`, `app/schemas/document.py`)
 - Claude API 연동 (`app/services/llm_client.py`) — system/user 프롬프트 분리(`app/core/prompts.py`), tool-use 기반 구조화 응답(`answer`/`reason`/`sources`), 타임아웃·재시도·에러 처리
 - 질문/응답/응답시간 로그 저장 및 조회 (`app/core/chat_log.py`, `/logs`)
-- pytest 테스트 (`tests/test_api.py`, `tests/test_llm_client.py`, `tests/test_chat_log.py`)
+- PDF/TXT 파일 업로드 (`app/ingestion/storage.py`) — `data/raw/`에 저장, 지원하지 않는 확장자는 400 반환
+- pytest 테스트 (`tests/test_api.py`, `tests/test_llm_client.py`, `tests/test_chat_log.py`, `tests/test_ingestion_storage.py`)
 
 ## 다음 작업 (미착수)
 
-- Obsidian / GitHub README / 포트폴리오 PDF / 블로그 문서 읽기 (`app/ingestion`)
+- 업로드된 문서에서 텍스트 추출/정제 (`parser.py`) 및 chunk 분할 (`chunker.py`)
+- 문서 메타데이터 DB 저장 (문서명/페이지/chunk)
 - 공통 Document 형식 변환 및 Vector DB 색인·검색 (`app/retrieval`)
 - 답변과 함께 출처(문서 경로 또는 URL) 반환
 - 근거 없는 질문에는 "확인할 수 없음"으로 응답
