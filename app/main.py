@@ -31,7 +31,7 @@ def health_check() -> dict[str, str]:
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     try:
-        reply = get_completion(request.message)
+        result = get_completion(request.message)
+        return ChatResponse(**result)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"LLM 호출 실패: {exc}") from exc
-    return ChatResponse(reply=reply)

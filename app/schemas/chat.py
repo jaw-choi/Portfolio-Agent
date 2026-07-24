@@ -6,4 +6,6 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    reply: str = Field(..., description="LLM 또는 echo 응답")
+    answer: str = Field(..., description="사용자 질문에 대한 답변")
+    reason: str = Field(..., description="답변의 근거 또는 이유")
+    sources: list[str] = Field(default_factory=list, description="답변에 사용된 출처 목록")

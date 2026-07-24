@@ -49,7 +49,7 @@ curl -X POST http://127.0.0.1:8000/chat \
 ```
 
 ```json
-{"reply": "..."}
+{"answer": "...", "reason": "...", "sources": []}
 ```
 
 ## 테스트
