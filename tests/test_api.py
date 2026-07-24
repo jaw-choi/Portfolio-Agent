@@ -9,11 +9,18 @@ client = TestClient(app)
 
 def test_chat_success():
     mocked = {"answer": "안녕하세요!", "reason": "인사에 대한 응답", "sources": []}
-    with patch("app.main.get_completion", return_value=mocked):
+    with (
+        patch("app.main.get_completion", return_value=mocked),
+        patch("app.main.log_chat") as mock_log_chat,
+    ):
         response = client.post("/chat", json={"message": "안녕하세요"})
 
     assert response.status_code == 200
     assert response.json() == mocked
+    mock_log_chat.assert_called_once()
+    args, _ = mock_log_chat.call_args
+    assert args[0] == "안녕하세요"
+    assert args[1] == "안녕하세요!"
 
 
 def test_chat_input_error():
@@ -28,3 +35,20 @@ def test_chat_server_error():
 
     assert response.status_code == 500
     assert "LLM failure" in response.json()["detail"]
+
+
+def test_read_logs():
+    mocked_logs = [
+        {
+            "timestamp": "2026-07-24T00:00:00+00:00",
+            "message": "q",
+            "answer": "a",
+            "response_time_ms": 12.3,
+        }
+    ]
+    with patch("app.main.get_logs", return_value=mocked_logs) as mock_get_logs:
+        response = client.get("/logs?limit=5")
+
+    assert response.status_code == 200
+    assert response.json() == mocked_logs
+    mock_get_logs.assert_called_once_with(5)

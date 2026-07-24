@@ -52,6 +52,16 @@ curl -X POST http://127.0.0.1:8000/chat \
 {"answer": "...", "reason": "...", "sources": []}
 ```
 
+**최근 대화 로그 조회**
+
+```bash
+curl "http://127.0.0.1:8000/logs?limit=5"
+```
+
+```json
+[{"timestamp": "...", "message": "...", "answer": "...", "response_time_ms": 812.4}]
+```
+
 ## 테스트
 
 ```bash
@@ -60,10 +70,11 @@ pytest
 
 ## 구현 범위 (현재)
 
-- FastAPI 서버, `/health`, `/chat` 엔드포인트
+- FastAPI 서버, `/health`, `/chat`, `/logs` 엔드포인트
 - Pydantic 스키마 기반 요청/응답 검증 (`app/schemas/chat.py`)
-- Claude API 연동 (`app/services/llm_client.py`) — `/chat`이 실제 LLM 응답을 반환
-- pytest API 테스트 (`tests/test_api.py`)
+- Claude API 연동 (`app/services/llm_client.py`) — system/user 프롬프트 분리(`app/core/prompts.py`), tool-use 기반 구조화 응답(`answer`/`reason`/`sources`), 타임아웃·재시도·에러 처리
+- 질문/응답/응답시간 로그 저장 및 조회 (`app/core/chat_log.py`, `/logs`)
+- pytest 테스트 (`tests/test_api.py`, `tests/test_llm_client.py`, `tests/test_chat_log.py`)
 
 ## 다음 작업 (미착수)
 

@@ -1,5 +1,8 @@
+import time
+
 from fastapi import FastAPI, HTTPException
 
+from app.core.chat_log import get_logs, log_chat
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.llm_client import get_completion
 
@@ -30,8 +33,18 @@ def health_check() -> dict[str, str]:
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
+    start = time.perf_counter()
     try:
         result = get_completion(request.message)
-        return ChatResponse(**result)
+        response = ChatResponse(**result)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"LLM 호출 실패: {exc}") from exc
+
+    response_time_ms = (time.perf_counter() - start) * 1000
+    log_chat(request.message, response.answer, response_time_ms)
+    return response
+
+
+@app.get("/logs")
+def read_logs(limit: int = 20) -> list[dict]:
+    return get_logs(limit)
