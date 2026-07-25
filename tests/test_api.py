@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from app.ingestion import parser, storage
+from app.ingestion import chunker, parser, storage
 from app.main import app
 
 client = TestClient(app)
@@ -58,6 +58,7 @@ def test_read_logs():
 def test_upload_document_success(tmp_path, monkeypatch):
     monkeypatch.setattr(storage, "RAW_DIR", tmp_path / "raw")
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
 
     response = client.post(
         "/documents",
@@ -70,9 +71,11 @@ def test_upload_document_success(tmp_path, monkeypatch):
     assert body["size_bytes"] == 5
     assert body["status"] == "uploaded"
     assert body["text_length"] == len("hello")
+    assert body["chunk_count"] == 1
     assert (tmp_path / "processed" / f"{body['document_id']}.txt").read_text(
         encoding="utf-8"
     ) == "hello"
+    assert (tmp_path / "chunks" / f"{body['document_id']}.json").exists()
 
 
 def test_upload_document_rejects_unsupported_type():
