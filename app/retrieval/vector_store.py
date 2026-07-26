@@ -11,7 +11,9 @@ COLLECTION_NAME = "chunks"
 def _get_collection():
     VECTOR_STORE_DIR.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
-    return client.get_or_create_collection(COLLECTION_NAME)
+    return client.get_or_create_collection(
+        COLLECTION_NAME, metadata={"hnsw:space": "cosine"}
+    )
 
 
 def query(query_embedding: list[float], top_k: int) -> dict:

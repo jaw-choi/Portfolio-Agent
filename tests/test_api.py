@@ -227,7 +227,7 @@ def test_search_success():
             "document_id": "doc1",
             "chunk_index": 0,
             "text": "싱글톤 패턴 설명",
-            "distance": 0.1,
+            "similarity": 0.9,
             "filename": "cs_singleton.md",
             "source_url": None,
         }

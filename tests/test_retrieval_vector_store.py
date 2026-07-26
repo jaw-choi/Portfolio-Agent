@@ -38,7 +38,12 @@ def test_add_chunks_with_empty_list_does_not_call_embedder(tmp_path, monkeypatch
 
 def test_query_returns_closest_chunk_first(tmp_path, monkeypatch):
     monkeypatch.setattr(vector_store, "VECTOR_STORE_DIR", tmp_path / "vector_store")
-    monkeypatch.setattr(vector_store, "embed_texts", fake_embed_texts)
+    # Cosine similarity only depends on direction, so these must differ in angle
+    # (not just magnitude like fake_embed_texts) for ordering to be meaningful.
+    direction_vectors = {"hi": [1.0, 0.0], "hi there": [0.0, 1.0]}
+    monkeypatch.setattr(
+        vector_store, "embed_texts", lambda texts: [direction_vectors[t] for t in texts]
+    )
 
     chunks = [
         {"chunk_id": "doc1_0", "document_id": "doc1", "chunk_index": 0, "text": "hi"},
@@ -46,7 +51,7 @@ def test_query_returns_closest_chunk_first(tmp_path, monkeypatch):
     ]
     vector_store.add_chunks(chunks)
 
-    result = vector_store.query([2.0, 0.0], top_k=1)
+    result = vector_store.query([1.0, 0.0], top_k=1)
 
     assert result["ids"][0] == ["doc1_0"]
 

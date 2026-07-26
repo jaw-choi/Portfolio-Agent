@@ -25,7 +25,7 @@ def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
                 "document_id": document_id,
                 "chunk_index": metadata["chunk_index"],
                 "text": text,
-                "distance": distance,
+                "similarity": 1 - distance,
                 "filename": document_meta.get("filename"),
                 "source_url": document_meta.get("source_url"),
             }

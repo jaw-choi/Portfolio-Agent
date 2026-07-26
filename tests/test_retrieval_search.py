@@ -31,7 +31,7 @@ def test_search_joins_metadata_and_returns_ordered_results(monkeypatch):
     assert len(results) == 2
     assert results[0]["chunk_id"] == "doc1_0"
     assert results[0]["text"] == "첫 번째 청크"
-    assert results[0]["distance"] == 0.1
+    assert results[0]["similarity"] == 0.9
     assert results[0]["filename"] == "노트.md"
     assert results[0]["source_url"] == "https://example.com/doc1"
     assert results[1]["chunk_index"] == 1
