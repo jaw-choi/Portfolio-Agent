@@ -10,6 +10,7 @@ from app.ingestion.parser import extract_text
 from app.ingestion.pipeline import ingest_text
 from app.ingestion.portfolio_crawler import crawl_portfolio
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
+from app.retrieval.search import search as search_documents
 from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.document import DocumentUploadResponse
@@ -19,6 +20,7 @@ from app.schemas.portfolio import (
     PortfolioCrawlResponse,
     PortfolioSectionResult,
 )
+from app.schemas.search import SearchRequest, SearchResponse, SearchResult
 from app.services.llm_client import get_completion
 
 app = FastAPI(
@@ -179,4 +181,13 @@ def crawl_github_endpoint(request: GithubCrawlRequest) -> GithubCrawlResponse:
         crawled_count=len(repos),
         repos=repos,
         failed=result["failed"],
+    )
+
+
+@app.post("/search", response_model=SearchResponse)
+def search_endpoint(request: SearchRequest) -> SearchResponse:
+    results = search_documents(request.query, request.top_k)
+    return SearchResponse(
+        query=request.query,
+        results=[SearchResult(**result) for result in results],
     )

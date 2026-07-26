@@ -218,3 +218,33 @@ def test_crawl_github_success(tmp_path, monkeypatch):
     stored = metadata_db.get_document_metadata("repo1")
     assert stored["filename"] == "repo1"
     assert stored["source_url"] == "https://github.com/jaw-choi/repo1"
+
+
+def test_search_success():
+    mocked_results = [
+        {
+            "chunk_id": "doc1_0",
+            "document_id": "doc1",
+            "chunk_index": 0,
+            "text": "싱글톤 패턴 설명",
+            "distance": 0.1,
+            "filename": "cs_singleton.md",
+            "source_url": None,
+        }
+    ]
+    with patch(
+        "app.main.search_documents", return_value=mocked_results
+    ) as mock_search:
+        response = client.post("/search", json={"query": "싱글톤이 뭐야?", "top_k": 3})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["query"] == "싱글톤이 뭐야?"
+    assert body["results"] == mocked_results
+    mock_search.assert_called_once_with("싱글톤이 뭐야?", 3)
+
+
+def test_search_rejects_invalid_top_k():
+    response = client.post("/search", json={"query": "질문", "top_k": 0})
+
+    assert response.status_code == 422

@@ -14,6 +14,15 @@ def _get_collection():
     return client.get_or_create_collection(COLLECTION_NAME)
 
 
+def query(query_embedding: list[float], top_k: int) -> dict:
+    collection = _get_collection()
+    return collection.query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"],
+    )
+
+
 def add_chunks(chunks: list[dict]) -> None:
     if not chunks:
         return
