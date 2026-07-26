@@ -181,3 +181,35 @@ def test_crawl_portfolio_success(tmp_path, monkeypatch):
     assert stored["filename"] == "About"
     assert stored["source_url"] == "https://example.github.io#about"
     assert stored["status"] == "crawled"
+
+
+def test_crawl_github_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
+    monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+
+    mocked_result = {
+        "documents": [
+            {
+                "document_id": "repo1",
+                "url": "https://github.com/jaw-choi/repo1",
+                "title": "repo1",
+                "text": "README 내용",
+            }
+        ],
+        "failed": [{"url": "https://github.com/jaw-choi/repo2", "error": "boom"}],
+    }
+    with patch("app.main.crawl_github", return_value=mocked_result) as mock_crawl:
+        response = client.post("/github/crawl", json={"username": "jaw-choi"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["username"] == "jaw-choi"
+    assert body["crawled_count"] == 1
+    assert body["repos"][0]["document_id"] == "repo1"
+    assert body["failed"] == [{"url": "https://github.com/jaw-choi/repo2", "error": "boom"}]
+    mock_crawl.assert_called_once_with("jaw-choi")
+
+    stored = metadata_db.get_document_metadata("repo1")
+    assert stored["filename"] == "repo1"
+    assert stored["source_url"] == "https://github.com/jaw-choi/repo1"

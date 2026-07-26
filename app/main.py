@@ -4,6 +4,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
 from app.ingestion.blog_crawler import crawl_blog
+from app.ingestion.github_crawler import crawl_github
 from app.ingestion.metadata_db import list_documents
 from app.ingestion.parser import extract_text
 from app.ingestion.pipeline import ingest_text
@@ -12,6 +13,7 @@ from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.document import DocumentUploadResponse
+from app.schemas.github import GithubCrawlRequest, GithubCrawlResponse, GithubRepoResult
 from app.schemas.portfolio import (
     PortfolioCrawlRequest,
     PortfolioCrawlResponse,
@@ -146,4 +148,35 @@ def crawl_portfolio_endpoint(request: PortfolioCrawlRequest) -> PortfolioCrawlRe
         portfolio_url=request.portfolio_url,
         section_count=len(sections),
         sections=sections,
+    )
+
+
+@app.post("/github/crawl", response_model=GithubCrawlResponse)
+def crawl_github_endpoint(request: GithubCrawlRequest) -> GithubCrawlResponse:
+    result = crawl_github(request.username)
+
+    repos = []
+    for doc in result["documents"]:
+        ingested = ingest_text(
+            document_id=doc["document_id"],
+            filename=doc["title"],
+            text=doc["text"],
+            status="crawled",
+            size_bytes=len(doc["text"].encode("utf-8")),
+            source_url=doc["url"],
+        )
+        repos.append(
+            GithubRepoResult(
+                document_id=doc["document_id"],
+                url=doc["url"],
+                title=doc["title"],
+                **ingested,
+            )
+        )
+
+    return GithubCrawlResponse(
+        username=request.username,
+        crawled_count=len(repos),
+        repos=repos,
+        failed=result["failed"],
     )
