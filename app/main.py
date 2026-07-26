@@ -4,6 +4,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
 from app.ingestion.chunker import chunk_text, save_chunks
+from app.ingestion.metadata_db import list_documents, save_document_metadata
 from app.ingestion.parser import extract_text, save_processed_text
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.schemas.chat import ChatRequest, ChatResponse
@@ -68,4 +69,18 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentUploadRespons
     chunks = chunk_text(result["document_id"], text)
     save_chunks(result["document_id"], chunks)
 
+    save_document_metadata(
+        document_id=result["document_id"],
+        filename=result["filename"],
+        size_bytes=result["size_bytes"],
+        status=result["status"],
+        text_length=len(text),
+        chunk_count=len(chunks),
+    )
+
     return DocumentUploadResponse(**result, text_length=len(text), chunk_count=len(chunks))
+
+
+@app.get("/documents")
+def read_documents() -> list[dict]:
+    return list_documents()

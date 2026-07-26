@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from app.ingestion import chunker, parser, storage
+from app.ingestion import chunker, metadata_db, parser, storage
 from app.main import app
 
 client = TestClient(app)
@@ -59,6 +59,7 @@ def test_upload_document_success(tmp_path, monkeypatch):
     monkeypatch.setattr(storage, "RAW_DIR", tmp_path / "raw")
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
     monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
+    monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
 
     response = client.post(
         "/documents",
@@ -77,6 +78,10 @@ def test_upload_document_success(tmp_path, monkeypatch):
     ) == "hello"
     assert (tmp_path / "chunks" / f"{body['document_id']}.json").exists()
 
+    stored = metadata_db.get_document_metadata(body["document_id"])
+    assert stored["filename"] == "notes.txt"
+    assert stored["chunk_count"] == 1
+
 
 def test_upload_document_rejects_unsupported_type():
     response = client.post(
@@ -85,3 +90,23 @@ def test_upload_document_rejects_unsupported_type():
     )
 
     assert response.status_code == 400
+
+
+def test_read_documents():
+    mocked_documents = [
+        {
+            "document_id": "doc1",
+            "filename": "notes.txt",
+            "size_bytes": 5,
+            "status": "uploaded",
+            "text_length": 5,
+            "chunk_count": 1,
+            "uploaded_at": "2026-07-26T00:00:00+00:00",
+        }
+    ]
+    with patch("app.main.list_documents", return_value=mocked_documents) as mock_list:
+        response = client.get("/documents")
+
+    assert response.status_code == 200
+    assert response.json() == mocked_documents
+    mock_list.assert_called_once()
