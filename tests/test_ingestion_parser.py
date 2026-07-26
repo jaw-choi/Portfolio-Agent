@@ -12,6 +12,15 @@ def test_extract_text_from_txt_cleans_whitespace(tmp_path):
     assert result == "hello world\nsecond line"
 
 
+def test_extract_text_from_markdown_cleans_whitespace(tmp_path):
+    file_path = tmp_path / "notes.md"
+    file_path.write_text("  # heading  \n\n  - item  \n", encoding="utf-8")
+
+    result = parser.extract_text(file_path)
+
+    assert result == "# heading\n- item"
+
+
 def test_extract_text_from_pdf_does_not_error_on_blank_page(tmp_path):
     pdf_path = tmp_path / "doc.pdf"
     writer = pypdf.PdfWriter()

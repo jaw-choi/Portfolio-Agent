@@ -2,7 +2,7 @@ import uuid
 from pathlib import Path
 
 RAW_DIR = Path("data/raw")
-ALLOWED_EXTENSIONS = {".pdf", ".txt"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".md"}
 
 
 class UnsupportedFileTypeError(Exception):

@@ -21,3 +21,13 @@ def test_save_upload_rejects_unsupported_extension(tmp_path, monkeypatch):
 
     with pytest.raises(storage.UnsupportedFileTypeError):
         storage.save_upload("malware.exe", b"data")
+
+
+def test_save_upload_accepts_markdown(tmp_path, monkeypatch):
+    monkeypatch.setattr(storage, "RAW_DIR", tmp_path)
+
+    result = storage.save_upload("note.md", b"# heading\ncontent")
+
+    assert result["status"] == "uploaded"
+    stored_files = list(tmp_path.glob(f"{result['document_id']}.md"))
+    assert len(stored_files) == 1
