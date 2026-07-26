@@ -4,13 +4,19 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
 from app.ingestion.blog_crawler import crawl_blog
-from app.ingestion.chunker import chunk_text, save_chunks
-from app.ingestion.metadata_db import list_documents, save_document_metadata
-from app.ingestion.parser import extract_text, save_processed_text
+from app.ingestion.metadata_db import list_documents
+from app.ingestion.parser import extract_text
+from app.ingestion.pipeline import ingest_text
+from app.ingestion.portfolio_crawler import crawl_portfolio
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.document import DocumentUploadResponse
+from app.schemas.portfolio import (
+    PortfolioCrawlRequest,
+    PortfolioCrawlResponse,
+    PortfolioSectionResult,
+)
 from app.services.llm_client import get_completion
 
 app = FastAPI(
@@ -66,21 +72,15 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentUploadRespons
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     text = extract_text(result["path"])
-    save_processed_text(result["document_id"], text)
-
-    chunks = chunk_text(result["document_id"], text)
-    save_chunks(result["document_id"], chunks)
-
-    save_document_metadata(
+    ingested = ingest_text(
         document_id=result["document_id"],
         filename=result["filename"],
-        size_bytes=result["size_bytes"],
+        text=text,
         status=result["status"],
-        text_length=len(text),
-        chunk_count=len(chunks),
+        size_bytes=result["size_bytes"],
     )
 
-    return DocumentUploadResponse(**result, text_length=len(text), chunk_count=len(chunks))
+    return DocumentUploadResponse(**result, **ingested)
 
 
 @app.get("/documents")
@@ -94,28 +94,20 @@ def crawl_blog_endpoint(request: BlogCrawlRequest) -> BlogCrawlResponse:
 
     posts = []
     for post in result["posts"]:
-        save_processed_text(post["document_id"], post["text"])
-
-        chunks = chunk_text(post["document_id"], post["text"])
-        save_chunks(post["document_id"], chunks)
-
-        save_document_metadata(
+        ingested = ingest_text(
             document_id=post["document_id"],
             filename=post["title"],
-            size_bytes=len(post["text"].encode("utf-8")),
+            text=post["text"],
             status="crawled",
-            text_length=len(post["text"]),
-            chunk_count=len(chunks),
+            size_bytes=len(post["text"].encode("utf-8")),
             source_url=post["url"],
         )
-
         posts.append(
             BlogPostResult(
                 document_id=post["document_id"],
                 url=post["url"],
                 title=post["title"],
-                text_length=len(post["text"]),
-                chunk_count=len(chunks),
+                **ingested,
             )
         )
 
@@ -124,4 +116,34 @@ def crawl_blog_endpoint(request: BlogCrawlRequest) -> BlogCrawlResponse:
         crawled_count=len(posts),
         posts=posts,
         failed=result["failed"],
+    )
+
+
+@app.post("/portfolio/crawl", response_model=PortfolioCrawlResponse)
+def crawl_portfolio_endpoint(request: PortfolioCrawlRequest) -> PortfolioCrawlResponse:
+    crawled_sections = crawl_portfolio(request.portfolio_url)
+
+    sections = []
+    for section in crawled_sections:
+        ingested = ingest_text(
+            document_id=section["document_id"],
+            filename=section["title"],
+            text=section["text"],
+            status="crawled",
+            size_bytes=len(section["text"].encode("utf-8")),
+            source_url=section["url"],
+        )
+        sections.append(
+            PortfolioSectionResult(
+                document_id=section["document_id"],
+                url=section["url"],
+                title=section["title"],
+                **ingested,
+            )
+        )
+
+    return PortfolioCrawlResponse(
+        portfolio_url=request.portfolio_url,
+        section_count=len(sections),
+        sections=sections,
     )

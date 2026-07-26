@@ -147,3 +147,37 @@ def test_crawl_blog_success(tmp_path, monkeypatch):
     assert stored["filename"] == "글 제목"
     assert stored["source_url"] == "https://example.tistory.com/1"
     assert stored["status"] == "crawled"
+
+
+def test_crawl_portfolio_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
+    monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+
+    mocked_sections = [
+        {
+            "document_id": "sec1",
+            "url": "https://example.github.io#about",
+            "title": "About",
+            "text": "자기소개 내용",
+        }
+    ]
+    with patch(
+        "app.main.crawl_portfolio", return_value=mocked_sections
+    ) as mock_crawl:
+        response = client.post(
+            "/portfolio/crawl", json={"portfolio_url": "https://example.github.io"}
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["portfolio_url"] == "https://example.github.io"
+    assert body["section_count"] == 1
+    assert body["sections"][0]["document_id"] == "sec1"
+    assert body["sections"][0]["title"] == "About"
+    mock_crawl.assert_called_once_with("https://example.github.io")
+
+    stored = metadata_db.get_document_metadata("sec1")
+    assert stored["filename"] == "About"
+    assert stored["source_url"] == "https://example.github.io#about"
+    assert stored["status"] == "crawled"
