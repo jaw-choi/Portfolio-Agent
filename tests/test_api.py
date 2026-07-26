@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.ingestion import chunker, metadata_db, parser, storage
 from app.main import app
+from app.retrieval import vector_store
 
 client = TestClient(app)
 
@@ -60,6 +61,7 @@ def test_upload_document_success(tmp_path, monkeypatch):
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
     monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
     monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+    monkeypatch.setattr(vector_store, "VECTOR_STORE_DIR", tmp_path / "vector_store")
 
     response = client.post(
         "/documents",
@@ -116,6 +118,7 @@ def test_crawl_blog_success(tmp_path, monkeypatch):
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
     monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
     monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+    monkeypatch.setattr(vector_store, "VECTOR_STORE_DIR", tmp_path / "vector_store")
 
     mocked_crawl_result = {
         "posts": [
@@ -153,6 +156,7 @@ def test_crawl_portfolio_success(tmp_path, monkeypatch):
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
     monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
     monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+    monkeypatch.setattr(vector_store, "VECTOR_STORE_DIR", tmp_path / "vector_store")
 
     mocked_sections = [
         {
@@ -187,6 +191,7 @@ def test_crawl_github_success(tmp_path, monkeypatch):
     monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
     monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
     monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+    monkeypatch.setattr(vector_store, "VECTOR_STORE_DIR", tmp_path / "vector_store")
 
     mocked_result = {
         "documents": [

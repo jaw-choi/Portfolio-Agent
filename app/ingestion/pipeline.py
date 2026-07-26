@@ -1,6 +1,7 @@
 from app.ingestion.chunker import chunk_text, save_chunks
 from app.ingestion.metadata_db import save_document_metadata
 from app.ingestion.parser import save_processed_text
+from app.retrieval.vector_store import add_chunks
 
 
 def ingest_text(
@@ -15,6 +16,7 @@ def ingest_text(
 
     chunks = chunk_text(document_id, text)
     save_chunks(document_id, chunks)
+    add_chunks(chunks)
 
     save_document_metadata(
         document_id=document_id,
