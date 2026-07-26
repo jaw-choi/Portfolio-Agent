@@ -3,10 +3,12 @@ import time
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
+from app.ingestion.blog_crawler import crawl_blog
 from app.ingestion.chunker import chunk_text, save_chunks
 from app.ingestion.metadata_db import list_documents, save_document_metadata
 from app.ingestion.parser import extract_text, save_processed_text
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
+from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.document import DocumentUploadResponse
 from app.services.llm_client import get_completion
@@ -84,3 +86,42 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentUploadRespons
 @app.get("/documents")
 def read_documents() -> list[dict]:
     return list_documents()
+
+
+@app.post("/blog/crawl", response_model=BlogCrawlResponse)
+def crawl_blog_endpoint(request: BlogCrawlRequest) -> BlogCrawlResponse:
+    result = crawl_blog(request.blog_url)
+
+    posts = []
+    for post in result["posts"]:
+        save_processed_text(post["document_id"], post["text"])
+
+        chunks = chunk_text(post["document_id"], post["text"])
+        save_chunks(post["document_id"], chunks)
+
+        save_document_metadata(
+            document_id=post["document_id"],
+            filename=post["title"],
+            size_bytes=len(post["text"].encode("utf-8")),
+            status="crawled",
+            text_length=len(post["text"]),
+            chunk_count=len(chunks),
+            source_url=post["url"],
+        )
+
+        posts.append(
+            BlogPostResult(
+                document_id=post["document_id"],
+                url=post["url"],
+                title=post["title"],
+                text_length=len(post["text"]),
+                chunk_count=len(chunks),
+            )
+        )
+
+    return BlogCrawlResponse(
+        blog_url=request.blog_url,
+        crawled_count=len(posts),
+        posts=posts,
+        failed=result["failed"],
+    )

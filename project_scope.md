@@ -53,7 +53,7 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 - Obsidian Markdown 읽기
 - GitHub README 읽기
 - 포트폴리오 PDF 읽기
-- 블로그 일부 데이터 읽기
+- 블로그 전체 글 자동 크롤링
 - 공통 Document 형식 변환
 - Vector DB 검색
 - 답변과 출처 반환
@@ -64,4 +64,3 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 - 개인정보 포함 문서
 - API 키와 인증정보
 - GitHub 전체 코드 자동 분석
-- 블로그 무제한 크롤링

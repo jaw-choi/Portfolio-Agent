@@ -17,6 +17,7 @@ class DocumentMetadata(Base):
     status = Column(String, nullable=False)
     text_length = Column(Integer, nullable=False)
     chunk_count = Column(Integer, nullable=False)
+    source_url = Column(String, nullable=True)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -34,6 +35,7 @@ def save_document_metadata(
     status: str,
     text_length: int,
     chunk_count: int,
+    source_url: str | None = None,
 ) -> None:
     with _get_session() as session:
         session.merge(
@@ -44,6 +46,7 @@ def save_document_metadata(
                 status=status,
                 text_length=text_length,
                 chunk_count=chunk_count,
+                source_url=source_url,
             )
         )
         session.commit()
@@ -73,5 +76,6 @@ def _to_dict(record: DocumentMetadata) -> dict:
         "status": record.status,
         "text_length": record.text_length,
         "chunk_count": record.chunk_count,
+        "source_url": record.source_url,
         "uploaded_at": record.uploaded_at.isoformat() if record.uploaded_at else None,
     }

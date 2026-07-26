@@ -110,3 +110,40 @@ def test_read_documents():
     assert response.status_code == 200
     assert response.json() == mocked_documents
     mock_list.assert_called_once()
+
+
+def test_crawl_blog_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(chunker, "CHUNKS_DIR", tmp_path / "chunks")
+    monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
+
+    mocked_crawl_result = {
+        "posts": [
+            {
+                "document_id": "doc1",
+                "url": "https://example.tistory.com/1",
+                "title": "글 제목",
+                "text": "본문 내용",
+            }
+        ],
+        "failed": [{"url": "https://example.tistory.com/2", "error": "timeout"}],
+    }
+    with patch("app.main.crawl_blog", return_value=mocked_crawl_result) as mock_crawl:
+        response = client.post(
+            "/blog/crawl", json={"blog_url": "https://example.tistory.com"}
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["blog_url"] == "https://example.tistory.com"
+    assert body["crawled_count"] == 1
+    assert body["posts"][0]["document_id"] == "doc1"
+    assert body["posts"][0]["chunk_count"] == 1
+    assert body["failed"] == [{"url": "https://example.tistory.com/2", "error": "timeout"}]
+    mock_crawl.assert_called_once_with("https://example.tistory.com")
+
+    assert (tmp_path / "processed" / "doc1.txt").read_text(encoding="utf-8") == "본문 내용"
+    stored = metadata_db.get_document_metadata("doc1")
+    assert stored["filename"] == "글 제목"
+    assert stored["source_url"] == "https://example.tistory.com/1"
+    assert stored["status"] == "crawled"

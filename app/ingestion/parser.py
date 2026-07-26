@@ -10,7 +10,7 @@ def extract_text(path: Path) -> str:
         raw_text = _extract_pdf_text(path)
     else:
         raw_text = path.read_text(encoding="utf-8", errors="replace")
-    return _clean_text(raw_text)
+    return clean_text(raw_text)
 
 
 def _extract_pdf_text(path: Path) -> str:
@@ -18,7 +18,7 @@ def _extract_pdf_text(path: Path) -> str:
     return "\n".join(page.extract_text() or "" for page in reader.pages)
 
 
-def _clean_text(text: str) -> str:
+def clean_text(text: str) -> str:
     lines = (line.strip() for line in text.splitlines())
     return "\n".join(line for line in lines if line)
 
