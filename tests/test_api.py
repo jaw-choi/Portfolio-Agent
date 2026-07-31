@@ -12,13 +12,16 @@ client = TestClient(app)
 def test_chat_success():
     mocked = {"answer": "안녕하세요!", "reason": "인사에 대한 응답", "sources": []}
     with (
-        patch("app.main.get_completion", return_value=mocked),
+        patch("app.main.search_documents", return_value=[]) as mock_search,
+        patch("app.main.get_completion", return_value=mocked) as mock_completion,
         patch("app.main.log_chat") as mock_log_chat,
     ):
         response = client.post("/chat", json={"message": "안녕하세요"})
 
     assert response.status_code == 200
     assert response.json() == mocked
+    mock_search.assert_called_once_with("안녕하세요")
+    mock_completion.assert_called_once_with("안녕하세요", [])
     mock_log_chat.assert_called_once()
     args, _ = mock_log_chat.call_args
     assert args[0] == "안녕하세요"
@@ -32,11 +35,38 @@ def test_chat_input_error():
 
 
 def test_chat_server_error():
-    with patch("app.main.get_completion", side_effect=RuntimeError("LLM failure")):
+    with (
+        patch("app.main.search_documents", return_value=[]),
+        patch("app.main.get_completion", side_effect=RuntimeError("LLM failure")),
+    ):
         response = client.post("/chat", json={"message": "안녕하세요"})
 
     assert response.status_code == 500
     assert "LLM failure" in response.json()["detail"]
+
+
+def test_chat_uses_retrieved_context_as_sources():
+    mocked_chunks = [
+        {
+            "chunk_id": "doc1_0",
+            "document_id": "doc1",
+            "chunk_index": 0,
+            "text": "싱글톤 패턴 설명",
+            "similarity": 0.6,
+            "filename": "cs_singleton.md",
+            "source_url": None,
+        }
+    ]
+    mocked = {"answer": "싱글톤은...", "reason": "노트 참고", "sources": ["cs_singleton.md"]}
+    with (
+        patch("app.main.search_documents", return_value=mocked_chunks),
+        patch("app.main.get_completion", return_value=mocked) as mock_completion,
+        patch("app.main.log_chat"),
+    ):
+        response = client.post("/chat", json={"message": "싱글톤이 뭐야?"})
+
+    assert response.status_code == 200
+    mock_completion.assert_called_once_with("싱글톤이 뭐야?", mocked_chunks)
 
 
 def test_read_logs():

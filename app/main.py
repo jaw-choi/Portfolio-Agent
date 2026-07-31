@@ -52,10 +52,11 @@ def health_check() -> dict[str, str]:
 def chat(request: ChatRequest) -> ChatResponse:
     start = time.perf_counter()
     try:
-        result = get_completion(request.message)
+        context_chunks = search_documents(request.message)
+        result = get_completion(request.message, context_chunks)
         response = ChatResponse(**result)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"LLM 호출 실패: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"답변 생성 실패: {exc}") from exc
 
     response_time_ms = (time.perf_counter() - start) * 1000
     log_chat(request.message, response.answer, response_time_ms)

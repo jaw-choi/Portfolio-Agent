@@ -1,6 +1,6 @@
 import anthropic
 
-from app.core.prompts import SYSTEM_PROMPT
+from app.core.prompts import SYSTEM_PROMPT, build_user_message
 
 _client: anthropic.Anthropic | None = None
 
@@ -41,7 +41,8 @@ def _get_client() -> anthropic.Anthropic:
     return _client
 
 
-def get_completion(message: str) -> dict:
+def get_completion(message: str, context_chunks: list[dict] | None = None) -> dict:
+    user_content = build_user_message(message, context_chunks or [])
     try:
         response = _get_client().messages.create(
             model="claude-opus-4-8",
@@ -49,7 +50,7 @@ def get_completion(message: str) -> dict:
             system=SYSTEM_PROMPT,
             tools=[_RESPOND_TOOL],
             tool_choice={"type": "tool", "name": "respond"},
-            messages=[{"role": "user", "content": message}],
+            messages=[{"role": "user", "content": user_content}],
         )
     except anthropic.APITimeoutError as exc:
         raise LLMClientError("LLM 응답 시간이 초과되었습니다.") from exc

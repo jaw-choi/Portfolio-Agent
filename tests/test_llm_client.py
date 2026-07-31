@@ -36,6 +36,36 @@ def test_get_completion_returns_structured_answer():
     assert kwargs["messages"] == [{"role": "user", "content": "안녕"}]
 
 
+def test_get_completion_includes_context_chunks_in_prompt():
+    llm_client._client = None
+    expected = {"answer": "ok", "reason": "because", "sources": ["cs_singleton.md"]}
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(type="tool_use", input=expected)]
+
+    context_chunks = [
+        {
+            "document_id": "doc1",
+            "text": "싱글톤 설명 내용",
+            "filename": "cs_singleton.md",
+            "source_url": None,
+        }
+    ]
+
+    with patch("app.services.llm_client.anthropic.Anthropic") as mock_anthropic_cls:
+        mock_client = mock_anthropic_cls.return_value
+        mock_client.messages.create.return_value = mock_response
+
+        result = llm_client.get_completion("싱글톤이 뭐야?", context_chunks)
+
+    llm_client._client = None
+    assert result == expected
+    _, kwargs = mock_client.messages.create.call_args
+    sent_content = kwargs["messages"][0]["content"]
+    assert "싱글톤 설명 내용" in sent_content
+    assert "cs_singleton.md" in sent_content
+    assert sent_content.endswith("질문: 싱글톤이 뭐야?")
+
+
 def test_get_client_configures_timeout_and_retries():
     llm_client._client = None
 
