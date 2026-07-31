@@ -248,3 +248,18 @@ def test_search_rejects_invalid_top_k():
     response = client.post("/search", json={"query": "질문", "top_k": 0})
 
     assert response.status_code == 422
+
+
+def test_search_rejects_empty_query():
+    response = client.post("/search", json={"query": "", "top_k": 3})
+
+    assert response.status_code == 422
+
+
+def test_search_rejects_blank_query():
+    with patch(
+        "app.main.search_documents", side_effect=ValueError("검색어가 비어 있습니다.")
+    ):
+        response = client.post("/search", json={"query": "   ", "top_k": 3})
+
+    assert response.status_code == 400

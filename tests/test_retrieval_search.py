@@ -1,3 +1,5 @@
+import pytest
+
 from app.retrieval import search as search_module
 
 
@@ -71,3 +73,13 @@ def test_search_returns_empty_list_when_no_results(monkeypatch):
     )
 
     assert search_module.search("아무거나") == []
+
+
+def test_search_rejects_blank_query(monkeypatch):
+    calls = []
+    monkeypatch.setattr(search_module, "embed_text", lambda query: calls.append(query))
+
+    with pytest.raises(ValueError):
+        search_module.search("   ")
+
+    assert calls == []

@@ -186,7 +186,11 @@ def crawl_github_endpoint(request: GithubCrawlRequest) -> GithubCrawlResponse:
 
 @app.post("/search", response_model=SearchResponse)
 def search_endpoint(request: SearchRequest) -> SearchResponse:
-    results = search_documents(request.query, request.top_k)
+    try:
+        results = search_documents(request.query, request.top_k)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     return SearchResponse(
         query=request.query,
         results=[SearchResult(**result) for result in results],

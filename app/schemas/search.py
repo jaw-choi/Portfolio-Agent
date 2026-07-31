@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class SearchRequest(BaseModel):
-    query: str = Field(..., description="검색 질의")
+    query: str = Field(..., min_length=1, description="검색 질의")
     top_k: int = Field(5, description="반환할 최대 결과 개수", ge=1, le=20)
 
 

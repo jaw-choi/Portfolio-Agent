@@ -6,6 +6,9 @@ DEFAULT_TOP_K = 5
 
 
 def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
+    if not query or not query.strip():
+        raise ValueError("검색어가 비어 있습니다.")
+
     query_embedding = embed_text(query)
     raw = query_vector_store(query_embedding, top_k)
 
@@ -16,6 +19,7 @@ def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
 
     results = []
     for chunk_id, text, metadata, distance in zip(ids, documents, metadatas, distances):
+        similarity = 1 - distance
         document_id = metadata["document_id"]
         document_meta = get_document_metadata(document_id) or {}
 
@@ -25,7 +29,7 @@ def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
                 "document_id": document_id,
                 "chunk_index": metadata["chunk_index"],
                 "text": text,
-                "similarity": 1 - distance,
+                "similarity": similarity,
                 "filename": document_meta.get("filename"),
                 "source_url": document_meta.get("source_url"),
             }
