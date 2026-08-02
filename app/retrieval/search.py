@@ -2,7 +2,7 @@ from app.ingestion.metadata_db import get_document_metadata
 from app.retrieval.embedder import embed_text
 from app.retrieval.vector_store import query as query_vector_store
 
-DEFAULT_TOP_K = 5
+DEFAULT_TOP_K = 10
 
 
 def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
