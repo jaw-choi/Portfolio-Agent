@@ -75,6 +75,36 @@
   }
   #new-chat:hover { border-color: var(--accent); }
 
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #mode-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  #mode-toggle button {
+    border: none;
+    background: var(--panel);
+    color: var(--muted);
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #mode-toggle button + button { border-left: 1px solid var(--border); }
+  #mode-toggle button.active {
+    background: var(--accent);
+    color: white;
+  }
+  #mode-note {
+    margin: 6px 20px 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
   #messages {
     flex: 1;
     overflow-y: auto;
@@ -142,6 +172,48 @@
     color: var(--muted);
   }
 
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 90%;
+    width: 100%;
+  }
+  .result-card {
+    background: var(--agent-bubble);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .result-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .result-title {
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .result-title a { color: inherit; }
+  .result-score {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .result-text {
+    color: var(--muted);
+    line-height: 1.5;
+    max-height: 4.5em;
+    overflow: hidden;
+  }
+
   .typing {
     display: inline-flex;
     gap: 4px;
@@ -200,8 +272,15 @@
       <h1>Personal Career Knowledge Agent</h1>
       <p>Obsidian · 블로그 · 포트폴리오 · GitHub 기반 개인 지식 RAG</p>
     </div>
-    <button id="new-chat" type="button">새 대화</button>
+    <div class="header-right">
+      <div id="mode-toggle">
+        <button type="button" data-mode="search" class="active">🔍 검색</button>
+        <button type="button" data-mode="chat">💬 채팅</button>
+      </div>
+      <button id="new-chat" type="button">새 대화</button>
+    </div>
   </header>
+  <div id="mode-note">검색 모드는 API 키 없이 바로 됩니다. 채팅 모드는 답변 문장을 생성하려면 서버에 API 키가 설정되어 있어야 합니다.</div>
 
   <div id="messages">
     <div class="empty-hint" id="empty-hint">
@@ -211,8 +290,8 @@
   </div>
 
   <form id="composer">
-    <textarea id="message-input" rows="1" placeholder="질문을 입력하세요..." autofocus></textarea>
-    <button id="send-btn" type="submit">전송</button>
+    <textarea id="message-input" rows="1" placeholder="검색어를 입력하세요..." autofocus></textarea>
+    <button id="send-btn" type="submit">검색</button>
   </form>
 </div>
 
@@ -223,8 +302,30 @@
   const input = document.getElementById('message-input');
   const sendBtn = document.getElementById('send-btn');
   const newChatBtn = document.getElementById('new-chat');
+  const modeButtons = document.querySelectorAll('#mode-toggle button');
 
   let conversationId = null;
+  let mode = 'search';
+
+  function applyModePlaceholders() {
+    if (mode === 'search') {
+      input.placeholder = '검색어를 입력하세요...';
+      sendBtn.textContent = '검색';
+    } else {
+      input.placeholder = '질문을 입력하세요...';
+      sendBtn.textContent = '전송';
+    }
+  }
+
+  modeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      modeButtons.forEach((b) => b.classList.toggle('active', b === btn));
+      applyModePlaceholders();
+      input.focus();
+    });
+  });
+  applyModePlaceholders();
 
   function scrollToBottom() {
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -295,6 +396,90 @@
     addRow('error', (bubble) => { bubble.textContent = text; });
   }
 
+  function addSearchResults(results) {
+    if (emptyHint) emptyHint.remove();
+    const row = document.createElement('div');
+    row.className = 'row agent';
+    const wrap = document.createElement('div');
+    wrap.className = 'results';
+
+    if (results.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'bubble';
+      empty.textContent = '관련된 내용을 찾지 못했습니다.';
+      wrap.appendChild(empty);
+    }
+
+    results.forEach((r) => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+
+      const header = document.createElement('div');
+      header.className = 'result-card-header';
+
+      const title = document.createElement('div');
+      title.className = 'result-title';
+      const label = r.filename || r.source_url || r.document_id;
+      if (r.source_url) {
+        const a = document.createElement('a');
+        a.href = r.source_url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = label;
+        title.appendChild(a);
+      } else {
+        title.textContent = label;
+      }
+      header.appendChild(title);
+
+      const score = document.createElement('span');
+      score.className = 'result-score';
+      score.textContent = '유사도 ' + Math.round(r.similarity * 100) + '%';
+      header.appendChild(score);
+
+      const text = document.createElement('div');
+      text.className = 'result-text';
+      text.textContent = r.text;
+
+      card.appendChild(header);
+      card.appendChild(text);
+      wrap.appendChild(card);
+    });
+
+    row.appendChild(wrap);
+    messagesEl.appendChild(row);
+    scrollToBottom();
+  }
+
+  async function sendChat(message) {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, conversation_id: conversationId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      addErrorMessage(data.detail || `요청이 실패했습니다 (${res.status})`);
+      return;
+    }
+    conversationId = data.conversation_id;
+    addAgentMessage(data);
+  }
+
+  async function sendSearch(query) {
+    const res = await fetch('/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, top_k: 5 }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      addErrorMessage(data.detail || `요청이 실패했습니다 (${res.status})`);
+      return;
+    }
+    addSearchResults(data.results);
+  }
+
   async function sendMessage(message) {
     addUserMessage(message);
     const typingRow = addTypingIndicator();
@@ -302,25 +487,15 @@
     input.disabled = true;
 
     try {
-      const res = await fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, conversation_id: conversationId }),
-      });
-      const data = await res.json();
-      typingRow.remove();
-
-      if (!res.ok) {
-        addErrorMessage(data.detail || `요청이 실패했습니다 (${res.status})`);
-        return;
+      if (mode === 'search') {
+        await sendSearch(message);
+      } else {
+        await sendChat(message);
       }
-
-      conversationId = data.conversation_id;
-      addAgentMessage(data);
     } catch (err) {
-      typingRow.remove();
       addErrorMessage('서버에 연결할 수 없습니다: ' + err.message);
     } finally {
+      typingRow.remove();
       sendBtn.disabled = false;
       input.disabled = false;
       input.focus();
