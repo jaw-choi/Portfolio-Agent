@@ -9,6 +9,7 @@ data/processed/
 data/chunks/
 data/metadata.db
 data/vector_store/
+data/conversations/
 logs/
 
 *.pdf

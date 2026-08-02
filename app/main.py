@@ -1,8 +1,10 @@
 import time
+import uuid
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
+from app.core.conversation import append_turn, get_history
 from app.ingestion.blog_crawler import crawl_blog
 from app.ingestion.github_crawler import crawl_github
 from app.ingestion.metadata_db import list_documents
@@ -63,19 +65,24 @@ def _sources_from_chunks(chunks: list[dict]) -> list[ChatSource]:
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     start = time.perf_counter()
+    conversation_id = request.conversation_id or str(uuid.uuid4())
     try:
+        history = get_history(conversation_id) if request.conversation_id else []
         context_chunks = search_documents(request.message)
-        result = get_completion(request.message, context_chunks)
+        result = get_completion(request.message, context_chunks, history)
         response = ChatResponse(
             answer=result["answer"],
             reason=result["reason"],
             sources=_sources_from_chunks(context_chunks),
+            conversation_id=conversation_id,
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"답변 생성 실패: {exc}") from exc
 
     response_time_ms = (time.perf_counter() - start) * 1000
     log_chat(request.message, response.answer, response_time_ms)
+    append_turn(conversation_id, "user", request.message)
+    append_turn(conversation_id, "assistant", response.answer)
     return response
 
 

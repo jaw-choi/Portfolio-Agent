@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="사용자 질문")
+    conversation_id: str | None = Field(
+        None, description="대화 세션 ID. 없으면 새 대화로 시작하고 새 ID를 발급합니다."
+    )
 
 
 class ChatSource(BaseModel):
@@ -16,3 +19,4 @@ class ChatResponse(BaseModel):
     sources: list[ChatSource] = Field(
         default_factory=list, description="답변에 사용된 출처 목록 (검색된 청크 기반)"
     )
+    conversation_id: str = Field(..., description="이 대화의 세션 ID. 다음 요청에 그대로 전달하면 대화가 이어집니다.")

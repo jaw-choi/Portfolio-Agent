@@ -36,8 +36,13 @@ def _get_client() -> anthropic.Anthropic:
     return _client
 
 
-def get_completion(message: str, context_chunks: list[dict] | None = None) -> dict:
+def get_completion(
+    message: str,
+    context_chunks: list[dict] | None = None,
+    history: list[dict] | None = None,
+) -> dict:
     user_content = build_user_message(message, context_chunks or [])
+    messages = [*(history or []), {"role": "user", "content": user_content}]
     try:
         response = _get_client().messages.create(
             model="claude-opus-4-8",
@@ -45,7 +50,7 @@ def get_completion(message: str, context_chunks: list[dict] | None = None) -> di
             system=SYSTEM_PROMPT,
             tools=[_RESPOND_TOOL],
             tool_choice={"type": "tool", "name": "respond"},
-            messages=[{"role": "user", "content": user_content}],
+            messages=messages,
         )
     except anthropic.APITimeoutError as exc:
         raise LLMClientError("LLM 응답 시간이 초과되었습니다.") from exc

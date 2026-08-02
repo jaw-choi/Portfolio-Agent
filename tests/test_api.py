@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from app.core import conversation
 from app.ingestion import chunker, metadata_db, parser, storage
 from app.main import app
 from app.retrieval import vector_store
@@ -15,17 +16,23 @@ def test_chat_success():
         patch("app.main.search_documents", return_value=[]) as mock_search,
         patch("app.main.get_completion", return_value=mocked) as mock_completion,
         patch("app.main.log_chat") as mock_log_chat,
+        patch("app.main.append_turn") as mock_append_turn,
     ):
         response = client.post("/chat", json={"message": "안녕하세요"})
 
     assert response.status_code == 200
-    assert response.json() == {**mocked, "sources": []}
+    body = response.json()
+    assert body["answer"] == mocked["answer"]
+    assert body["reason"] == mocked["reason"]
+    assert body["sources"] == []
+    assert body["conversation_id"]
     mock_search.assert_called_once_with("안녕하세요")
-    mock_completion.assert_called_once_with("안녕하세요", [])
+    mock_completion.assert_called_once_with("안녕하세요", [], [])
     mock_log_chat.assert_called_once()
     args, _ = mock_log_chat.call_args
     assert args[0] == "안녕하세요"
     assert args[1] == "안녕하세요!"
+    assert mock_append_turn.call_count == 2
 
 
 def test_chat_input_error():
@@ -71,14 +78,49 @@ def test_chat_uses_retrieved_context_as_sources():
         patch("app.main.search_documents", return_value=mocked_chunks),
         patch("app.main.get_completion", return_value=mocked) as mock_completion,
         patch("app.main.log_chat"),
+        patch("app.main.append_turn"),
     ):
         response = client.post("/chat", json={"message": "싱글톤이 뭐야?"})
 
     assert response.status_code == 200
-    mock_completion.assert_called_once_with("싱글톤이 뭐야?", mocked_chunks)
+    mock_completion.assert_called_once_with("싱글톤이 뭐야?", mocked_chunks, [])
     # sources are derived from retrieved chunks, deduped, not trusted from the LLM
     assert response.json()["sources"] == [
         {"filename": "cs_singleton.md", "source_url": None}
+    ]
+
+
+def test_chat_continues_conversation_with_history(tmp_path, monkeypatch):
+    monkeypatch.setattr(conversation, "CONVERSATIONS_DIR", tmp_path / "conversations")
+
+    mocked_first = {"answer": "첫 답변", "reason": "이유1"}
+    with (
+        patch("app.main.search_documents", return_value=[]),
+        patch("app.main.get_completion", return_value=mocked_first),
+        patch("app.main.log_chat"),
+    ):
+        first = client.post("/chat", json={"message": "첫 질문"})
+
+    conversation_id = first.json()["conversation_id"]
+    assert conversation_id
+
+    mocked_second = {"answer": "두번째 답변", "reason": "이유2"}
+    with (
+        patch("app.main.search_documents", return_value=[]),
+        patch("app.main.get_completion", return_value=mocked_second) as mock_completion,
+        patch("app.main.log_chat"),
+    ):
+        second = client.post(
+            "/chat",
+            json={"message": "두번째 질문", "conversation_id": conversation_id},
+        )
+
+    assert second.status_code == 200
+    assert second.json()["conversation_id"] == conversation_id
+    args, _ = mock_completion.call_args
+    assert args[2] == [
+        {"role": "user", "content": "첫 질문"},
+        {"role": "assistant", "content": "첫 답변"},
     ]
 
 

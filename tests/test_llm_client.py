@@ -67,6 +67,31 @@ def test_get_completion_includes_context_chunks_in_prompt():
     assert sent_content.endswith("질문: 싱글톤이 뭐야?")
 
 
+def test_get_completion_prepends_conversation_history():
+    llm_client._client = None
+    expected = {"answer": "ok", "reason": "because"}
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(type="tool_use", input=expected)]
+
+    history = [
+        {"role": "user", "content": "첫 질문"},
+        {"role": "assistant", "content": "첫 답변"},
+    ]
+
+    with patch("app.services.llm_client.anthropic.Anthropic") as mock_anthropic_cls:
+        mock_client = mock_anthropic_cls.return_value
+        mock_client.messages.create.return_value = mock_response
+
+        result = llm_client.get_completion("두번째 질문", history=history)
+
+    llm_client._client = None
+    assert result == expected
+    _, kwargs = mock_client.messages.create.call_args
+    assert kwargs["messages"][0] == history[0]
+    assert kwargs["messages"][1] == history[1]
+    assert kwargs["messages"][2]["content"].endswith("질문: 두번째 질문")
+
+
 def test_get_client_configures_timeout_and_retries():
     llm_client._client = None
 
