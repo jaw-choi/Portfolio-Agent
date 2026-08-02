@@ -40,3 +40,16 @@ def test_save_processed_text_writes_file(tmp_path, monkeypatch):
 
     assert output_path == tmp_path / "doc123.txt"
     assert output_path.read_text(encoding="utf-8") == "hello"
+
+
+def test_load_processed_text_round_trips_with_save(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path)
+    parser.save_processed_text("doc123", "hello")
+
+    assert parser.load_processed_text("doc123") == "hello"
+
+
+def test_load_processed_text_returns_none_when_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path)
+
+    assert parser.load_processed_text("missing") is None

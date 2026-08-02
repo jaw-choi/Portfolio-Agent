@@ -348,6 +348,11 @@
     addRow('user', (bubble) => { bubble.textContent = text; });
   }
 
+  function documentLink(source) {
+    if (source.source_url) return source.source_url;
+    return '/documents/' + encodeURIComponent(source.document_id) + '/content';
+  }
+
   function addTypingIndicator() {
     return addRow('agent', (bubble) => {
       bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
@@ -372,20 +377,13 @@
         sources.className = 'sources';
         data.sources.forEach((s) => {
           const label = s.filename || s.source_url || '출처';
-          if (s.source_url) {
-            const a = document.createElement('a');
-            a.className = 'source-chip';
-            a.href = s.source_url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.textContent = label;
-            sources.appendChild(a);
-          } else {
-            const span = document.createElement('span');
-            span.className = 'source-chip';
-            span.textContent = label;
-            sources.appendChild(span);
-          }
+          const a = document.createElement('a');
+          a.className = 'source-chip';
+          a.href = documentLink(s);
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = label;
+          sources.appendChild(a);
         });
         bubble.appendChild(sources);
       }
@@ -420,16 +418,12 @@
       const title = document.createElement('div');
       title.className = 'result-title';
       const label = r.filename || r.source_url || r.document_id;
-      if (r.source_url) {
-        const a = document.createElement('a');
-        a.href = r.source_url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.textContent = label;
-        title.appendChild(a);
-      } else {
-        title.textContent = label;
-      }
+      const a = document.createElement('a');
+      a.href = documentLink(r);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = label;
+      title.appendChild(a);
       header.appendChild(title);
 
       const score = document.createElement('span');

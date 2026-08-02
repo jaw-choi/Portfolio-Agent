@@ -94,7 +94,7 @@ def test_chat_uses_retrieved_context_as_sources():
     mock_completion.assert_called_once_with("싱글톤이 뭐야?", mocked_chunks, [])
     # sources are derived from retrieved chunks, deduped, not trusted from the LLM
     assert response.json()["sources"] == [
-        {"filename": "cs_singleton.md", "source_url": None}
+        {"document_id": "doc1", "filename": "cs_singleton.md", "source_url": None}
     ]
 
 
@@ -205,6 +205,26 @@ def test_read_documents():
     assert response.status_code == 200
     assert response.json() == mocked_documents
     mock_list.assert_called_once()
+
+
+def test_read_document_content_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+    (tmp_path / "processed").mkdir()
+    (tmp_path / "processed" / "doc1.txt").write_text("싱글톤 노트 내용", encoding="utf-8")
+
+    response = client.get("/documents/doc1/content")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert response.text == "싱글톤 노트 내용"
+
+
+def test_read_document_content_missing_returns_404(tmp_path, monkeypatch):
+    monkeypatch.setattr(parser, "PROCESSED_DIR", tmp_path / "processed")
+
+    response = client.get("/documents/missing/content")
+
+    assert response.status_code == 404
 
 
 def test_crawl_blog_success(tmp_path, monkeypatch):

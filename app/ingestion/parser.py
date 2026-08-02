@@ -28,3 +28,10 @@ def save_processed_text(document_id: str, text: str) -> Path:
     output_path = PROCESSED_DIR / f"{document_id}.txt"
     output_path.write_text(text, encoding="utf-8")
     return output_path
+
+
+def load_processed_text(document_id: str) -> str | None:
+    path = PROCESSED_DIR / f"{document_id}.txt"
+    if not path.exists():
+        return None
+    return path.read_text(encoding="utf-8")

@@ -4,14 +4,14 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 
 from app.core.chat_log import get_logs, log_chat
 from app.core.conversation import append_turn, get_history
 from app.ingestion.blog_crawler import crawl_blog
 from app.ingestion.github_crawler import crawl_github
 from app.ingestion.metadata_db import list_documents
-from app.ingestion.parser import extract_text
+from app.ingestion.parser import extract_text, load_processed_text
 from app.ingestion.pipeline import ingest_text
 from app.ingestion.portfolio_crawler import crawl_portfolio
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
@@ -63,7 +63,9 @@ def _sources_from_chunks(chunks: list[dict]) -> list[ChatSource]:
         if key == (None, None) or key in seen:
             continue
         seen.add(key)
-        sources.append(ChatSource(filename=key[0], source_url=key[1]))
+        sources.append(
+            ChatSource(document_id=chunk["document_id"], filename=key[0], source_url=key[1])
+        )
     return sources
 
 
@@ -119,6 +121,14 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentUploadRespons
 @app.get("/documents")
 def read_documents() -> list[dict]:
     return list_documents()
+
+
+@app.get("/documents/{document_id}/content")
+def read_document_content(document_id: str) -> PlainTextResponse:
+    text = load_processed_text(document_id)
+    if text is None:
+        raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
+    return PlainTextResponse(text)
 
 
 @app.post("/blog/crawl", response_model=BlogCrawlResponse)

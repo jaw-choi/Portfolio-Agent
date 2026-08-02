@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
 
 
 class ChatSource(BaseModel):
+    document_id: str = Field(..., description="원본 문서 ID")
     filename: str | None = Field(None, description="출처 문서명")
     source_url: str | None = Field(None, description="출처 URL (있는 경우)")
 
