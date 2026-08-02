@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "category": "cs",
+    "question": "싱글톤 패턴이 뭐야?",
+    "expected_source": "cs_singleton.md",
+    "source_url": null,
+    "keywords": ["인스턴스", "하나"]
+  },
+  {
+    "id": 2,
+    "category": "troubleshooting",
+    "question": "충돌 버그는 어떻게 해결했어?",
+    "expected_source": "troubleshooting_collision_bug.md",
+    "source_url": null,
+    "keywords": ["충돌", "버그"]
+  },
+  {
+    "id": 3,
+    "category": "project_planning",
+    "question": "5차 프로젝트 계획이 뭐야?",
+    "expected_source": "project5_planning.md",
+    "source_url": null,
+    "keywords": ["프로젝트"]
+  },
+  {
+    "id": 4,
+    "category": "project_retrospective",
+    "question": "4차 프로젝트 회고에서 뭘 배웠어?",
+    "expected_source": "project4_retrospective.md",
+    "source_url": null,
+    "keywords": ["회고"]
+  },
+  {
+    "id": 5,
+    "category": "career",
+    "question": "커리어 세션에서 어떤 이야기를 나눴어?",
+    "expected_source": "career_session_notes.md",
+    "source_url": null,
+    "keywords": ["커리어"]
+  },
+  {
+    "id": 6,
+    "category": "blog_cs",
+    "question": "std::vector의 크기는 어떻게 늘어나?",
+    "expected_source": "std::vector의 크기가 변경 될 때",
+    "source_url": "https://learn-forever.tistory.com/1",
+    "keywords": ["vector", "크기"]
+  },
+  {
+    "id": 7,
+    "category": "blog_cs",
+    "question": "프로세스와 스레드의 차이가 뭐야?",
+    "expected_source": "프로세스, 스레드 Let's Go",
+    "source_url": "https://learn-forever.tistory.com/2",
+    "keywords": ["프로세스", "스레드"]
+  },
+  {
+    "id": 8,
+    "category": "blog_cs",
+    "question": "TCP와 UDP의 차이를 설명해줘",
+    "expected_source": "TCP와 UDP",
+    "source_url": "https://learn-forever.tistory.com/3",
+    "keywords": ["TCP", "UDP"]
+  },
+  {
+    "id": 9,
+    "category": "blog_graphics",
+    "question": "DrawCall과 Batching은 뭐야?",
+    "expected_source": "DrawCall, Batching, Occlusion Culling",
+    "source_url": "https://learn-forever.tistory.com/4",
+    "keywords": ["DrawCall", "Batching"]
+  },
+  {
+    "id": 10,
+    "category": "blog_cs",
+    "question": "set과 map의 차이가 뭐야?",
+    "expected_source": "set 과 multiset 그리고 map과 multimap 그리고 unordered_map",
+    "source_url": "https://learn-forever.tistory.com/5",
+    "keywords": ["set", "map"]
+  },
+  {
+    "id": 11,
+    "category": "blog_cs",
+    "question": "가상함수와 순수가상함수의 차이는?",
+    "expected_source": "가상함수,순수가상함수,추상클래스,인터페이스",
+    "source_url": "https://learn-forever.tistory.com/6",
+    "keywords": ["가상함수"]
+  },
+  {
+    "id": 12,
+    "category": "blog_cs",
+    "question": "stack과 heap의 차이는?",
+    "expected_source": "stack과 heap",
+    "source_url": "https://learn-forever.tistory.com/7",
+    "keywords": ["stack", "heap"]
+  },
+  {
+    "id": 13,
+    "category": "blog_graphics",
+    "question": "포워드 렌더링과 디퍼드 렌더링의 차이는?",
+    "expected_source": "포워드 렌더링과 디퍼드 렌더링",
+    "source_url": "https://learn-forever.tistory.com/8",
+    "keywords": ["렌더링"]
+  },
+  {
+    "id": 14,
+    "category": "blog_cs",
+    "question": "Page Fault가 뭐야?",
+    "expected_source": "컴퓨터 메모리 관리의 핵심: Stack, Virtual Memory, 그리고 Page Fault의 유기적 관계",
+    "source_url": "https://learn-forever.tistory.com/10",
+    "keywords": ["Page Fault"]
+  },
+  {
+    "id": 15,
+    "category": "blog_graphics",
+    "question": "mipmap이 뭐야?",
+    "expected_source": "mipmap",
+    "source_url": "https://learn-forever.tistory.com/15",
+    "keywords": ["mipmap"]
+  },
+  {
+    "id": 16,
+    "category": "blog_interview",
+    "question": "메이플스토리 채용 후기 알려줘",
+    "expected_source": "2025 메이플 집중채용 - 메이플스토리 pc 게임 프로그래머 채용 후기(0)",
+    "source_url": "https://learn-forever.tistory.com/19",
+    "keywords": ["메이플"]
+  },
+  {
+    "id": 17,
+    "category": "blog_interview",
+    "question": "NHN 게임공채 클라이언트 지원 후기는?",
+    "expected_source": "NHN 2025 게임공채 I 게임 클라이언트(0)",
+    "source_url": "https://learn-forever.tistory.com/22",
+    "keywords": ["NHN"]
+  },
+  {
+    "id": 18,
+    "category": "blog_interview",
+    "question": "NC소프트 코딩테스트 후기 알려줘",
+    "expected_source": "2025 NC soft 신입공채 게임 프로그래머 채용 코딩테스트 후기",
+    "source_url": "https://learn-forever.tistory.com/25",
+    "keywords": ["NC", "코딩테스트"]
+  },
+  {
+    "id": 19,
+    "category": "blog_interview",
+    "question": "넥토리얼 게임 프로그래머 준비는 어떻게 했어?",
+    "expected_source": "2025 넥토리얼 - 게임 프로그래머 준비(0)",
+    "source_url": "https://learn-forever.tistory.com/24",
+    "keywords": ["넥토리얼"]
+  },
+  {
+    "id": 20,
+    "category": "blog_interview",
+    "question": "iM뱅크 데이터분석 전문가 양성과정은 어떤 내용이야?",
+    "expected_source": "iM 뱅크 데이터분석 전문가 양성 과정 6기(0)",
+    "source_url": "https://learn-forever.tistory.com/17",
+    "keywords": ["iM", "데이터분석"]
+  },
+  {
+    "id": 21,
+    "category": "blog_project_retrospective",
+    "question": "1차 프로젝트 회고 내용 알려줘",
+    "expected_source": "1차 프로젝트 회고",
+    "source_url": "https://learn-forever.tistory.com/27",
+    "keywords": ["1차", "프로젝트"]
+  },
+  {
+    "id": 22,
+    "category": "blog_project_retrospective",
+    "question": "2차 프로젝트 회고에서 어떤 이슈가 있었어?",
+    "expected_source": "2차 프로젝트 회고",
+    "source_url": "https://learn-forever.tistory.com/31",
+    "keywords": ["2차", "프로젝트"]
+  },
+  {
+    "id": 23,
+    "category": "blog_project_retrospective",
+    "question": "3차 프로젝트 회고 요약해줘",
+    "expected_source": "3차 프로젝트 회고",
+    "source_url": "https://learn-forever.tistory.com/33",
+    "keywords": ["3차", "프로젝트"]
+  },
+  {
+    "id": 24,
+    "category": "blog_project_devlog",
+    "question": "베오메오 게임개발일지가 뭐야?",
+    "expected_source": "베오메오 게임개발일지 - 프롤로그",
+    "source_url": "https://learn-forever.tistory.com/28",
+    "keywords": ["베오메오"]
+  },
+  {
+    "id": 25,
+    "category": "blog_project_devlog",
+    "question": "베오메오 게임개발일지 1화 내용 알려줘",
+    "expected_source": "베오메오 게임개발일지 - 1화",
+    "source_url": "https://learn-forever.tistory.com/29",
+    "keywords": ["베오메오"]
+  },
+  {
+    "id": 26,
+    "category": "portfolio",
+    "question": "포트폴리오에 어떤 프로젝트들이 있어?",
+    "expected_source": "Selected Projects",
+    "source_url": "https://jaw-choi.github.io#projects",
+    "keywords": ["프로젝트"]
+  },
+  {
+    "id": 27,
+    "category": "portfolio",
+    "question": "보유하고 있는 기술 스택이 뭐야?",
+    "expected_source": "Skills",
+    "source_url": "https://jaw-choi.github.io#skills",
+    "keywords": []
+  },
+  {
+    "id": 28,
+    "category": "portfolio",
+    "question": "학력이 어떻게 돼?",
+    "expected_source": "Education",
+    "source_url": "https://jaw-choi.github.io#education",
+    "keywords": []
+  },
+  {
+    "id": 29,
+    "category": "github",
+    "question": "HarvestLeague 프로젝트가 뭐야?",
+    "expected_source": "HarvestLeague",
+    "source_url": "https://github.com/jaw-choi/HarvestLeague",
+    "keywords": ["HarvestLeague"]
+  },
+  {
+    "id": 30,
+    "category": "github",
+    "question": "PickPickBoom은 어떤 프로젝트야?",
+    "expected_source": "PickPickBoom",
+    "source_url": "https://github.com/jaw-choi/PickPickBoom",
+    "keywords": ["PickPickBoom"]
+  }
+]
