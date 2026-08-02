@@ -1,8 +1,11 @@
 from app.core.prompts import build_user_message
 
 
-def test_build_user_message_returns_plain_message_without_context():
-    assert build_user_message("안녕", []) == "안녕"
+def test_build_user_message_without_context_instructs_dont_know_fallback():
+    result = build_user_message("싱글톤이 뭐야?", [])
+
+    assert result.endswith("질문: 싱글톤이 뭐야?")
+    assert "모른다" in result
 
 
 def test_build_user_message_includes_context_and_question():

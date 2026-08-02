@@ -33,7 +33,8 @@ def test_get_completion_returns_structured_answer():
     _, kwargs = mock_client.messages.create.call_args
     assert kwargs["system"] == SYSTEM_PROMPT
     assert kwargs["tool_choice"] == {"type": "tool", "name": "respond"}
-    assert kwargs["messages"] == [{"role": "user", "content": "안녕"}]
+    sent_content = kwargs["messages"][0]["content"]
+    assert sent_content.endswith("질문: 안녕")
 
 
 def test_get_completion_includes_context_chunks_in_prompt():
