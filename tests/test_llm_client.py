@@ -18,7 +18,7 @@ def _dummy_response(status_code: int) -> httpx.Response:
 
 def test_get_completion_returns_structured_answer():
     llm_client._client = None
-    expected = {"answer": "ok", "reason": "because", "sources": ["doc1"]}
+    expected = {"answer": "ok", "reason": "because"}
     mock_response = MagicMock()
     mock_response.content = [MagicMock(type="tool_use", input=expected)]
 
@@ -38,7 +38,7 @@ def test_get_completion_returns_structured_answer():
 
 def test_get_completion_includes_context_chunks_in_prompt():
     llm_client._client = None
-    expected = {"answer": "ok", "reason": "because", "sources": ["cs_singleton.md"]}
+    expected = {"answer": "ok", "reason": "because"}
     mock_response = MagicMock()
     mock_response.content = [MagicMock(type="tool_use", input=expected)]
 

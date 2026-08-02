@@ -10,7 +10,7 @@ client = TestClient(app)
 
 
 def test_chat_success():
-    mocked = {"answer": "안녕하세요!", "reason": "인사에 대한 응답", "sources": []}
+    mocked = {"answer": "안녕하세요!", "reason": "인사에 대한 응답"}
     with (
         patch("app.main.search_documents", return_value=[]) as mock_search,
         patch("app.main.get_completion", return_value=mocked) as mock_completion,
@@ -19,7 +19,7 @@ def test_chat_success():
         response = client.post("/chat", json={"message": "안녕하세요"})
 
     assert response.status_code == 200
-    assert response.json() == mocked
+    assert response.json() == {**mocked, "sources": []}
     mock_search.assert_called_once_with("안녕하세요")
     mock_completion.assert_called_once_with("안녕하세요", [])
     mock_log_chat.assert_called_once()
@@ -55,9 +55,18 @@ def test_chat_uses_retrieved_context_as_sources():
             "similarity": 0.6,
             "filename": "cs_singleton.md",
             "source_url": None,
-        }
+        },
+        {
+            "chunk_id": "doc1_1",
+            "document_id": "doc1",
+            "chunk_index": 1,
+            "text": "싱글톤 패턴 예시",
+            "similarity": 0.5,
+            "filename": "cs_singleton.md",
+            "source_url": None,
+        },
     ]
-    mocked = {"answer": "싱글톤은...", "reason": "노트 참고", "sources": ["cs_singleton.md"]}
+    mocked = {"answer": "싱글톤은...", "reason": "노트 참고"}
     with (
         patch("app.main.search_documents", return_value=mocked_chunks),
         patch("app.main.get_completion", return_value=mocked) as mock_completion,
@@ -67,6 +76,10 @@ def test_chat_uses_retrieved_context_as_sources():
 
     assert response.status_code == 200
     mock_completion.assert_called_once_with("싱글톤이 뭐야?", mocked_chunks)
+    # sources are derived from retrieved chunks, deduped, not trusted from the LLM
+    assert response.json()["sources"] == [
+        {"filename": "cs_singleton.md", "source_url": None}
+    ]
 
 
 def test_read_logs():

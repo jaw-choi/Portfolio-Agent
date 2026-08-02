@@ -12,7 +12,7 @@ from app.ingestion.portfolio_crawler import crawl_portfolio
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.retrieval.search import search as search_documents
 from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, ChatSource
 from app.schemas.document import DocumentUploadResponse
 from app.schemas.github import GithubCrawlRequest, GithubCrawlResponse, GithubRepoResult
 from app.schemas.portfolio import (
@@ -48,13 +48,29 @@ def health_check() -> dict[str, str]:
     }
 
 
+def _sources_from_chunks(chunks: list[dict]) -> list[ChatSource]:
+    seen = set()
+    sources = []
+    for chunk in chunks:
+        key = (chunk.get("filename"), chunk.get("source_url"))
+        if key == (None, None) or key in seen:
+            continue
+        seen.add(key)
+        sources.append(ChatSource(filename=key[0], source_url=key[1]))
+    return sources
+
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     start = time.perf_counter()
     try:
         context_chunks = search_documents(request.message)
         result = get_completion(request.message, context_chunks)
-        response = ChatResponse(**result)
+        response = ChatResponse(
+            answer=result["answer"],
+            reason=result["reason"],
+            sources=_sources_from_chunks(context_chunks),
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"답변 생성 실패: {exc}") from exc
 

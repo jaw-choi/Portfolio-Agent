@@ -20,13 +20,8 @@ _RESPOND_TOOL = {
         "properties": {
             "answer": {"type": "string", "description": "사용자 질문에 대한 답변"},
             "reason": {"type": "string", "description": "답변의 근거 또는 이유"},
-            "sources": {
-                "type": "array",
-                "items": {"type": "string"},
-                "description": "답변에 사용된 출처 목록. 없으면 빈 배열.",
-            },
         },
-        "required": ["answer", "reason", "sources"],
+        "required": ["answer", "reason"],
     },
 }
 
