@@ -52,7 +52,7 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 
 - Obsidian Markdown 읽기
 - GitHub README 읽기
-- 포트폴리오 PDF 읽기
+- 포트폴리오 웹사이트 크롤링 (GitHub Pages)
 - 블로그 전체 글 자동 크롤링
 - 공통 Document 형식 변환
 - Vector DB 검색
