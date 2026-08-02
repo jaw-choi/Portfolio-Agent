@@ -20,14 +20,14 @@ $ curl http://127.0.0.1:8000/documents
 
 | 항목 | 값 |
 |---|---|
-| 문서 수 | 28 (업로드 5 + 크롤링 23) |
-| 총 chunk 수 | 308 |
+| 문서 수 | 70 (업로드 5 + 블로그 34 + 포트폴리오 8 + GitHub README 23) |
+| 총 chunk 수 | 528 |
 | 임베딩 모델 | `jhgan/ko-sroberta-multitask` (로컬, 한국어 튜닝) |
 | 벡터 스토어 | ChromaDB (`cosine` 거리) |
 
 ## 2. 검색 (`POST /search`)
 
-실제 벡터 스토어(308 chunks)에 대해 "싱글톤 패턴이 뭐야?"로 질의한 결과입니다. `similarity`는 1에 가까울수록 유사합니다.
+실제 벡터 스토어(528 chunks)에 대해 "싱글톤 패턴이 뭐야?"로 질의한 결과입니다. `similarity`는 1에 가까울수록 유사합니다.
 
 ```
 $ curl -X POST http://127.0.0.1:8000/search \
