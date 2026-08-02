@@ -6,15 +6,24 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 
 ## 아키텍처
 
-```
-질문 → /chat
-        │
-        ├─ 1. 벡터 검색 (app/retrieval/search.py)
-        │     ko-sroberta-multitask 임베딩 → ChromaDB(cosine) 검색 → 관련 문서 chunk top-k
-        │
-        └─ 2. 답변 생성 (app/services/llm_client.py)
-              검색된 chunk를 근거 자료로 프롬프트에 삽입 → Claude 호출(tool-use 구조화 출력)
-              → {answer, reason, sources, conversation_id}
+```mermaid
+flowchart TD
+    Upload["POST /documents<br/>Obsidian 업로드"] --> Pipeline
+    Blog["POST /blog/crawl<br/>Tistory"] --> Pipeline
+    Portfolio["POST /portfolio/crawl<br/>GitHub Pages"] --> Pipeline
+    Github["POST /github/crawl<br/>GitHub README"] --> Pipeline
+
+    Pipeline["app/ingestion/pipeline.py<br/>추출 → chunk 분할 → 임베딩 → 저장"]
+    Pipeline --> Chroma[("ChromaDB<br/>cosine 벡터 검색")]
+    Pipeline --> MetaDB[("SQLite / PostgreSQL<br/>문서 메타데이터")]
+
+    User(["사용자 질문"]) --> Chat["POST /chat"]
+    Chat --> Search["app/retrieval/search.py<br/>ko-sroberta-multitask 임베딩"]
+    Search --> Chroma
+    Chroma --> TopK["관련 chunk top-k"]
+    TopK --> Prompt["app/core/prompts.py<br/>근거 자료 + 대화 히스토리 삽입"]
+    Prompt --> LLM["Claude API<br/>tool-use 구조화 출력"]
+    LLM --> Response["{answer, reason, sources, conversation_id}"]
 ```
 
 데이터 수집(ingestion)은 4개 소스를 지원하며, 모두 공통 파이프라인(`app/ingestion/pipeline.py`)을 거쳐 텍스트 추출 → chunk 분할 → 임베딩/벡터 저장 → 메타데이터 DB 저장 순으로 처리됩니다.
@@ -25,6 +34,10 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 | Tistory 블로그 | `POST /blog/crawl` | `sitemap.xml` 기반 전체 글 크롤링 |
 | GitHub Pages 포트폴리오 | `POST /portfolio/crawl` | 페이지의 `<section id="...">`별로 분리 수집 |
 | GitHub README | `POST /github/crawl` | 사용자의 non-fork 저장소 README 전체 수집 |
+
+## 스크린샷
+
+> TODO: 서버 실행 후 `http://127.0.0.1:8000/docs`(Swagger UI)와 실제 `/chat` 호출 결과 스크린샷을 추가하세요. 이 세션에는 브라우저 자동화 도구가 연결되어 있지 않아 실제 캡처는 하지 못했습니다 — `/chrome`으로 Claude in Chrome을 연결하면 다음 세션에서 자동으로 캡처할 수 있습니다.
 
 ## 설치
 
