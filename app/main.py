@@ -1,6 +1,7 @@
 import time
 import uuid
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.core.chat_log import get_logs, log_chat
@@ -24,6 +25,8 @@ from app.schemas.portfolio import (
 )
 from app.schemas.search import SearchRequest, SearchResponse, SearchResult
 from app.services.llm_client import get_completion
+
+load_dotenv()
 
 app = FastAPI(
     title="Personal Career Knowledge Agent",
