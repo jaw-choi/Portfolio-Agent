@@ -69,7 +69,7 @@ cp .env.example .env
 uvicorn app.main:app --reload
 ```
 
-서버가 뜨면 `http://127.0.0.1:8000`에서 확인할 수 있습니다. (`sentence-transformers`/`torch` 임포트 때문에 첫 기동에 10~15초 정도 걸릴 수 있습니다.)
+서버가 뜨면 `http://127.0.0.1:8000`에서 바로 채팅 UI가 열립니다 — 별도 도구 없이 브라우저에서 질문하고 답변·출처를 확인할 수 있습니다. API를 직접 호출/테스트하려면 `http://127.0.0.1:8000/docs`(Swagger UI)를 사용하세요. (`sentence-transformers`/`torch` 임포트 때문에 첫 기동에 10~15초 정도 걸릴 수 있습니다.)
 
 ### Docker Compose (app + PostgreSQL)
 
@@ -197,7 +197,8 @@ tests/                      # pytest
 - 질문/응답/응답시간 로그 저장 및 조회
 - 검색 품질 평가셋과 chunk size/top-k 튜닝 (`eval_dataset.json`, `eval_report.md`)
 - Dockerfile + docker-compose (app + PostgreSQL), `.env.example`
-- pytest 테스트 (68개, `tests/`)
+- 웹 채팅 UI (`GET /`, `app/static/index.html`) — 별도 프레임워크/빌드 없이 순수 HTML/CSS/JS로 구현, 답변과 함께 출처를 보여주고 `conversation_id`로 대화를 이어감
+- pytest 테스트 (69개, `tests/`)
 
 ## 알려진 한계
 
@@ -206,5 +207,6 @@ tests/                      # pytest
 
 ## 다음 작업
 
-- GitHub 저장소 정리, README 구조도/스크린샷 (Week 8)
-- 이력서/포트폴리오/인터뷰 정리 문서 (Week 8)
+- `ANTHROPIC_API_KEY` 확보 후 `/chat` 실제 답변 품질 측정
+- 실제 Docker 환경에서 Dockerfile/docker-compose 빌드·실행 검증
+- 스크린샷 캡처 (`/chrome`으로 브라우저 도구 연결 후)

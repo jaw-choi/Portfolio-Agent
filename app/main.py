@@ -1,8 +1,10 @@
 import time
 import uuid
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app.core.chat_log import get_logs, log_chat
 from app.core.conversation import append_turn, get_history
@@ -37,12 +39,12 @@ app = FastAPI(
     version="0.1.0",
 )
 
+STATIC_DIR = Path(__file__).parent / "static"
+
 
 @app.get("/")
-def read_root() -> dict[str, str]:
-    return {
-        "message": "Personal Career Knowledge Agent is running"
-    }
+def read_root() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/health")

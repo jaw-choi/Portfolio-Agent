@@ -10,6 +10,14 @@ from app.retrieval import vector_store
 client = TestClient(app)
 
 
+def test_root_serves_chat_ui():
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Personal Career Knowledge Agent" in response.text
+
+
 def test_chat_success():
     mocked = {"answer": "안녕하세요!", "reason": "인사에 대한 응답"}
     with (
