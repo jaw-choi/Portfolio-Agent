@@ -1,6 +1,8 @@
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
-from sqlalchemy import Column, DateTime, Integer, String, create_engine, func, text
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DB_PATH = Path("data/metadata.db")
@@ -18,12 +20,22 @@ class DocumentMetadata(Base):
     text_length = Column(Integer, nullable=False)
     chunk_count = Column(Integer, nullable=False)
     source_url = Column(String, nullable=True)
-    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+    # client-side default (not server_default=func.now()): SQLite's CURRENT_TIMESTAMP
+    # only has 1s resolution, which caused ordering ties; datetime.now() has
+    # microsecond resolution and works identically across SQLite/PostgreSQL.
+    uploaded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+def _get_engine_url() -> str:
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        return database_url
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{DB_PATH}"
 
 
 def _get_session():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(f"sqlite:///{DB_PATH}")
+    engine = create_engine(_get_engine_url())
     Base.metadata.create_all(engine)
     return sessionmaker(bind=engine)()
 
@@ -62,7 +74,7 @@ def list_documents() -> list[dict]:
     with _get_session() as session:
         records = (
             session.query(DocumentMetadata)
-            .order_by(text("rowid DESC"))
+            .order_by(DocumentMetadata.uploaded_at.desc())
             .all()
         )
         return [_to_dict(record) for record in records]

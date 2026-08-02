@@ -56,6 +56,25 @@ def test_save_document_metadata_upserts_existing_id(tmp_path, monkeypatch):
     assert records[0]["filename"] == "v2.txt"
 
 
+def test_database_url_env_var_overrides_db_path(tmp_path, monkeypatch):
+    alt_db_path = tmp_path / "alt.db"
+    unused_db_path = tmp_path / "should_not_be_used.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{alt_db_path}")
+    monkeypatch.setattr(metadata_db, "DB_PATH", unused_db_path)
+
+    metadata_db.save_document_metadata(
+        document_id="doc1",
+        filename="a.txt",
+        size_bytes=1,
+        status="uploaded",
+        text_length=1,
+        chunk_count=1,
+    )
+
+    assert alt_db_path.exists()
+    assert not unused_db_path.exists()
+
+
 def test_list_documents_orders_most_recent_first(tmp_path, monkeypatch):
     monkeypatch.setattr(metadata_db, "DB_PATH", tmp_path / "metadata.db")
 
