@@ -14,7 +14,7 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 - 텍스트를 의미 단위로 나누고(chunk), 로컬 한국어 임베딩 모델로 벡터화해 ChromaDB에 저장·검색
 - 실제 30문항 평가셋으로 검색 정확도를 측정(47%→57%)하고, 그 근거로 검색 파라미터를 튜닝
 - Claude API와 연결해 "근거 문서에 없으면 모른다고 답하라"는 규칙으로 프롬프트 설계
-- 테스트 73개 작성, Docker/PostgreSQL 지원까지 구성
+- 테스트 76개 작성, Docker/PostgreSQL 지원까지 구성
 - 설치 없이 브라우저에서 바로 써볼 수 있는 채팅 UI 추가
 
 **직접 실행해서 확인하는 법** (아래 3줄이면 됩니다 — API 키 없이도 검색 기능은 바로 동작합니다):
@@ -28,7 +28,7 @@ python -m uvicorn app.main:app --reload
 
 서버가 뜨면(첫 실행은 10~15초 정도 걸립니다) 브라우저에서 `http://127.0.0.1:8000`을 열어 채팅 UI에서 바로 검색해볼 수 있습니다. 첫 화면의 "검색" 모드는 API 키 없이 동작하고, "채팅" 모드로 Claude가 답변까지 생성하는 걸 보려면 `.env`에 `ANTHROPIC_API_KEY`가 필요합니다 (아래 "환경 변수" 참고).
 
-> 이 저장소에는 실제로 수집했던 데이터(제 Obsidian 노트, 블로그, 포트폴리오, GitHub README 등 70개 문서)는 포함되어 있지 않습니다 — 실행 시 생기는 데이터라 git에는 올리지 않았습니다(`.gitignore`). 대신 `data/samples/`에 실제 노트 5개를 남겨뒀으니, 서버 실행 후 `POST /documents`로 업로드해 검색해보시거나 본인 블로그/GitHub로 크롤링 엔드포인트를 테스트해볼 수 있습니다.
+> 이 저장소에는 실제로 수집했던 데이터(제 Obsidian 노트, 블로그, 포트폴리오, GitHub README 등 70개 문서)는 포함되어 있지 않습니다 — 실행 시 생기는 데이터라 git에는 올리지 않았습니다(`.gitignore`). 대신 문서 저장소가 비어 있으면 서버가 처음 뜰 때 `data/samples/`의 실제 노트 5개를 자동으로 채워 넣기 때문에, 위 3줄만 실행해도 곧바로 검색해볼 수 있습니다. 본인의 블로그/포트폴리오/GitHub로 직접 수집해보고 싶다면 아래 "블로그 / 포트폴리오 / GitHub 크롤링" 절을 참고하세요.
 
 **더 읽어볼 자료:**
 - [`demo.md`](demo.md) — 실제 API 호출/응답 예시
@@ -104,7 +104,7 @@ cp .env.example .env
 python -m uvicorn app.main:app --reload
 ```
 
-서버가 뜨면 `http://127.0.0.1:8000`에서 바로 채팅 UI가 열립니다 — 별도 도구 없이 브라우저에서 질문하고 답변·출처를 확인할 수 있습니다. API를 직접 호출/테스트하려면 `http://127.0.0.1:8000/docs`(Swagger UI)를 사용하세요. (`sentence-transformers`/`torch` 임포트 때문에 첫 기동에 10~15초 정도 걸릴 수 있습니다.)
+서버가 뜨면 `http://127.0.0.1:8000`에서 바로 채팅 UI가 열립니다 — 별도 도구 없이 브라우저에서 질문하고 답변·출처를 확인할 수 있습니다. API를 직접 호출/테스트하려면 `http://127.0.0.1:8000/docs`(Swagger UI)를 사용하세요. (`sentence-transformers`/`torch` 임포트 때문에 첫 기동에 10~15초 정도 걸릴 수 있습니다.) 문서 저장소가 비어 있는 첫 실행이라면 `data/samples/`의 샘플 노트 5개가 자동으로 색인됩니다.
 
 ### Docker Compose (app + PostgreSQL)
 
@@ -233,7 +233,8 @@ tests/                      # pytest
 - 검색 품질 평가셋과 chunk size/top-k 튜닝 (`eval_dataset.json`, `eval_report.md`)
 - Dockerfile + docker-compose (app + PostgreSQL), `.env.example`
 - 웹 채팅 UI (`GET /`, `app/static/index.html`) — 별도 프레임워크/빌드 없이 순수 HTML/CSS/JS로 구현, 답변과 함께 출처를 보여주고 `conversation_id`로 대화를 이어감
-- pytest 테스트 (69개, `tests/`)
+- 최초 실행 자동 시딩 (`app/ingestion/seed.py`) — 문서 저장소가 비어 있으면(예: fresh clone) `data/samples/`의 샘플 노트를 자동 색인해, 별도 업로드 없이 바로 검색 가능
+- pytest 테스트 (76개, `tests/`)
 
 ## 알려진 한계
 
