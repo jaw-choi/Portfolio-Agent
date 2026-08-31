@@ -1,5 +1,6 @@
 import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -14,6 +15,7 @@ from app.ingestion.metadata_db import list_documents
 from app.ingestion.parser import extract_text, load_processed_text
 from app.ingestion.pipeline import ingest_text
 from app.ingestion.portfolio_crawler import crawl_portfolio
+from app.ingestion.seed import seed_sample_documents
 from app.ingestion.storage import UnsupportedFileTypeError, save_upload
 from app.retrieval.search import search as search_documents
 from app.schemas.blog import BlogCrawlRequest, BlogCrawlResponse, BlogPostResult
@@ -30,6 +32,13 @@ from app.services.llm_client import get_completion
 
 load_dotenv()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    seed_sample_documents()
+    yield
+
+
 app = FastAPI(
     title="Personal Career Knowledge Agent",
     description=(
@@ -37,6 +46,7 @@ app = FastAPI(
         "개발 경험을 통합하고 검색하는 개인 지식 RAG 서비스"
     ),
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 STATIC_DIR = Path(__file__).parent / "static"
