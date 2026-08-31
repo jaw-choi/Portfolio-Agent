@@ -4,6 +4,41 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 
 사용자가 질문하면 실제로 쌓아온 노트/글/프로젝트에서 관련 내용을 검색하고, 그 내용에 근거한 답변과 출처(파일명 또는 URL)를 함께 반환합니다.
 
+## 이 프로젝트를 처음 보시는 분들께
+
+**왜 만들었나:** 제 개발 경험이 Obsidian 노트, 기술 블로그, 포트폴리오 사이트, GitHub README 4곳에 흩어져 있어서, "제가 겪은 트러블슈팅이 뭐였죠?", "이 지원 공고와 맞는 제 경험이 있나요?" 같은 질문에 답하려면 매번 여러 곳을 뒤져야 했습니다. 그 4곳을 한 곳에서 검색되게 만든 것이 이 프로젝트입니다.
+
+**제가 실제로 한 일 (8주):**
+- FastAPI로 백엔드 서버를 처음부터 설계·구현 (엔드포인트 10개 이상)
+- Obsidian·블로그·포트폴리오·GitHub, 4개 소스를 자동으로 수집하는 파이프라인 구축
+- 텍스트를 의미 단위로 나누고(chunk), 로컬 한국어 임베딩 모델로 벡터화해 ChromaDB에 저장·검색
+- 실제 30문항 평가셋으로 검색 정확도를 측정(47%→57%)하고, 그 근거로 검색 파라미터를 튜닝
+- Claude API와 연결해 "근거 문서에 없으면 모른다고 답하라"는 규칙으로 프롬프트 설계
+- 테스트 73개 작성, Docker/PostgreSQL 지원까지 구성
+- 설치 없이 브라우저에서 바로 써볼 수 있는 채팅 UI 추가
+
+**직접 실행해서 확인하는 법** (아래 3줄이면 됩니다 — API 키 없이도 검색 기능은 바로 동작합니다):
+
+```bash
+git clone https://github.com/jaw-choi/Portfolio-Agent.git
+cd Portfolio-Agent
+python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+서버가 뜨면(첫 실행은 10~15초 정도 걸립니다) 브라우저에서 `http://127.0.0.1:8000`을 열어 채팅 UI에서 바로 검색해볼 수 있습니다. 첫 화면의 "검색" 모드는 API 키 없이 동작하고, "채팅" 모드로 Claude가 답변까지 생성하는 걸 보려면 `.env`에 `ANTHROPIC_API_KEY`가 필요합니다 (아래 "환경 변수" 참고).
+
+> 이 저장소에는 실제로 수집했던 데이터(제 Obsidian 노트, 블로그, 포트폴리오, GitHub README 등 70개 문서)는 포함되어 있지 않습니다 — 실행 시 생기는 데이터라 git에는 올리지 않았습니다(`.gitignore`). 대신 `data/samples/`에 실제 노트 5개를 남겨뒀으니, 서버 실행 후 `POST /documents`로 업로드해 검색해보시거나 본인 블로그/GitHub로 크롤링 엔드포인트를 테스트해볼 수 있습니다.
+
+**더 읽어볼 자료:**
+- [`demo.md`](demo.md) — 실제 API 호출/응답 예시
+- [`eval_report.md`](eval_report.md) — 검색 품질을 어떻게 측정하고 튜닝했는지
+- [`interview_qa.md`](interview_qa.md) — 설계 판단 Q&A (왜 Chroma인지, 왜 로컬 임베딩인지 등)
+- [`resume_ai.md`](resume_ai.md) — 이 프로젝트 기반 이력서 문장
+- [`portfolio_outline.md`](portfolio_outline.md) — 포트폴리오 페이지 구성안
+
+아래부터는 구조/설치/API 등 기술적인 내용입니다.
+
 ## 아키텍처
 
 ```mermaid
