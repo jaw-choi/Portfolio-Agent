@@ -23,7 +23,7 @@ Obsidian, 블로그, 포트폴리오, GitHub에 분산된 개발 경험과 학�
 git clone https://github.com/jaw-choi/Portfolio-Agent.git
 cd Portfolio-Agent
 python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 서버가 뜨면(첫 실행은 10~15초 정도 걸립니다) 브라우저에서 `http://127.0.0.1:8000`을 열어 채팅 UI에서 바로 검색해볼 수 있습니다. 첫 화면의 "검색" 모드는 API 키 없이 동작하고, "채팅" 모드로 Claude가 답변까지 생성하는 걸 보려면 `.env`에 `ANTHROPIC_API_KEY`가 필요합니다 (아래 "환경 변수" 참고).
@@ -101,7 +101,7 @@ cp .env.example .env
 ### 로컬 (venv)
 
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
 
 서버가 뜨면 `http://127.0.0.1:8000`에서 바로 채팅 UI가 열립니다 — 별도 도구 없이 브라우저에서 질문하고 답변·출처를 확인할 수 있습니다. API를 직접 호출/테스트하려면 `http://127.0.0.1:8000/docs`(Swagger UI)를 사용하세요. (`sentence-transformers`/`torch` 임포트 때문에 첫 기동에 10~15초 정도 걸릴 수 있습니다.)
