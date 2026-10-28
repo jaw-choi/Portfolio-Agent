@@ -10,8 +10,18 @@ SYSTEM_PROMPT = (
     "3. 인사말이나 참고 자료가 필요 없는 일반적인 대화에는 자연스럽게 답변해도 됩니다.\n"
     "4. reason에는 답변에 실제로 사용한 참고 자료 번호(예: [1])를 명시하세요. 근거 자료가 없다면 "
     "reason에 '근거 자료 없음'이라고 명시하세요.\n"
+    "5. 참고 자료가 질문에 답하기 부족하면 search_documents 도구로 다른 검색어를 써서 다시 검색하세요. "
+    "어떤 자료가 있는지 알아야 하면 list_documents 도구를 쓰세요. 최종 답변은 반드시 respond 도구로 제출하세요.\n"
     "답변은 한국어로 간결하게 작성하세요."
 )
+
+
+def format_context(chunks: list[dict], start: int = 1) -> str:
+    return "\n\n".join(
+        f"[{i}] 출처: {chunk.get('filename') or chunk.get('source_url') or chunk['document_id']}\n"
+        f"{chunk['text']}"
+        for i, chunk in enumerate(chunks, start=start)
+    )
 
 
 def build_user_message(message: str, context_chunks: list[dict]) -> str:
@@ -22,11 +32,7 @@ def build_user_message(message: str, context_chunks: list[dict]) -> str:
             f"질문: {message}"
         )
 
-    context_block = "\n\n".join(
-        f"[{i}] 출처: {chunk.get('filename') or chunk.get('source_url') or chunk['document_id']}\n"
-        f"{chunk['text']}"
-        for i, chunk in enumerate(context_chunks, start=1)
-    )
+    context_block = format_context(context_chunks)
     return (
         "다음은 질문과 관련하여 검색된 참고 자료입니다. 검색 순위나 유사도 점수와 무관하게 자료 "
         "내용이 실제로 질문에 답할 만큼 관련이 있는지 직접 판단하고, 관련 있는 자료에만 근거해서 "

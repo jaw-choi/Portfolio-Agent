@@ -90,7 +90,7 @@ def chat(request: ChatRequest) -> ChatResponse:
         response = ChatResponse(
             answer=result["answer"],
             reason=result["reason"],
-            sources=_sources_from_chunks(context_chunks),
+            sources=_sources_from_chunks(context_chunks + result.get("searched_chunks", [])),
             conversation_id=conversation_id,
         )
     except Exception as exc:

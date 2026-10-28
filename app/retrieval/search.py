@@ -1,3 +1,6 @@
+import time
+
+from app.core.search_log import log_search
 from app.ingestion.metadata_db import get_document_metadata
 from app.retrieval.embedder import embed_text
 from app.retrieval.vector_store import query as query_vector_store
@@ -9,6 +12,7 @@ def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     if not query or not query.strip():
         raise ValueError("검색어가 비어 있습니다.")
 
+    start = time.perf_counter()
     query_embedding = embed_text(query)
     raw = query_vector_store(query_embedding, top_k)
 
@@ -34,4 +38,6 @@ def search(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
                 "source_url": document_meta.get("source_url"),
             }
         )
+
+    log_search(query, top_k, results, (time.perf_counter() - start) * 1000)
     return results

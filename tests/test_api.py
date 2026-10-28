@@ -98,6 +98,36 @@ def test_chat_uses_retrieved_context_as_sources():
     ]
 
 
+def test_chat_includes_agent_searched_chunks_in_sources():
+    mocked = {
+        "answer": "답변",
+        "reason": "[1] 참고",
+        "searched_chunks": [
+            {
+                "chunk_id": "doc2_0",
+                "document_id": "doc2",
+                "chunk_index": 0,
+                "text": "추가 검색 결과",
+                "similarity": 0.4,
+                "filename": None,
+                "source_url": "https://example.tistory.com/2",
+            }
+        ],
+    }
+    with (
+        patch("app.main.search_documents", return_value=[]),
+        patch("app.main.get_completion", return_value=mocked),
+        patch("app.main.log_chat"),
+        patch("app.main.append_turn"),
+    ):
+        response = client.post("/chat", json={"message": "질문"})
+
+    assert response.status_code == 200
+    assert response.json()["sources"] == [
+        {"document_id": "doc2", "filename": None, "source_url": "https://example.tistory.com/2"}
+    ]
+
+
 def test_chat_continues_conversation_with_history(tmp_path, monkeypatch):
     monkeypatch.setattr(conversation, "CONVERSATIONS_DIR", tmp_path / "conversations")
 

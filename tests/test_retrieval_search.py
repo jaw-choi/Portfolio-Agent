@@ -3,7 +3,20 @@ import pytest
 from app.retrieval import search as search_module
 
 
-def test_search_joins_metadata_and_returns_ordered_results(monkeypatch):
+@pytest.fixture(autouse=True)
+def logged_searches(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        search_module,
+        "log_search",
+        lambda query, top_k, results, response_time_ms: calls.append(
+            (query, top_k, results)
+        ),
+    )
+    return calls
+
+
+def test_search_joins_metadata_and_returns_ordered_results(monkeypatch, logged_searches):
     monkeypatch.setattr(search_module, "embed_text", lambda query: [0.1, 0.2])
 
     raw_result = {
@@ -37,6 +50,7 @@ def test_search_joins_metadata_and_returns_ordered_results(monkeypatch):
     assert results[0]["filename"] == "노트.md"
     assert results[0]["source_url"] == "https://example.com/doc1"
     assert results[1]["chunk_index"] == 1
+    assert logged_searches == [("싱글톤이 뭐야?", 2, results)]
 
 
 def test_search_handles_missing_metadata_gracefully(monkeypatch):
